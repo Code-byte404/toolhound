@@ -117,7 +117,7 @@ reminder:
     - {text: "pick up dry cleaning", text_equiv: ["pick up dry cleaning", "Pick up the dry cleaning"], when_phrase: "tomorrow at noon", when_iso: "2026-03-21T12:00:00"}
     - {text: "renew the car insurance", text_equiv: ["renew the car insurance", "Renew car insurance"], when_phrase: "Tuesday at 8am", when_iso: "2026-03-24T08:00:00"}
     - {text: "take the vitamins", text_equiv: ["take the vitamins", "Take vitamins"], when_phrase: "tomorrow at 7am", when_iso: "2026-03-21T07:00:00"}
-    - {text: "submit the timesheet", text_equiv: ["submit the timesheet", "Submit timesheet"], when_phrase: "Friday at 5pm", when_iso: "2026-03-27T17:00:00"}
+    - {text: "submit the timesheet", text_equiv: ["submit the timesheet", "Submit timesheet"], when_phrase: "Friday at 5pm", when_iso: "2026-03-20T17:00:00"}
     - {text: "water the plants", text_equiv: ["water the plants", "Water the plants"], when_phrase: "Wednesday at 8am", when_iso: "2026-03-25T08:00:00"}
   test:
     - {text: "call the dentist", text_equiv: ["call the dentist", "Call dentist"], when_phrase: "tomorrow at 8am", when_iso: "2026-03-21T08:00:00"}
@@ -125,7 +125,7 @@ reminder:
     - {text: "pick up the kids", text_equiv: ["pick up the kids", "Pick up kids"], when_phrase: "tomorrow at 3pm", when_iso: "2026-03-21T15:00:00"}
     - {text: "renew the passport", text_equiv: ["renew the passport", "Renew passport"], when_phrase: "Tuesday at 9am", when_iso: "2026-03-24T09:00:00"}
     - {text: "feed the cat", text_equiv: ["feed the cat", "Feed cat"], when_phrase: "tomorrow at 6am", when_iso: "2026-03-21T06:00:00"}
-    - {text: "submit the expense report", text_equiv: ["submit the expense report", "Submit expense report"], when_phrase: "Friday at 4pm", when_iso: "2026-03-27T16:00:00"}
+    - {text: "submit the expense report", text_equiv: ["submit the expense report", "Submit expense report"], when_phrase: "Friday at 4pm", when_iso: "2026-03-20T16:00:00"}
     - {text: "water the garden", text_equiv: ["water the garden", "Water garden"], when_phrase: "Wednesday at 7am", when_iso: "2026-03-25T07:00:00"}
 
 event_solo:
@@ -206,7 +206,7 @@ event_attendees:
     - {title: "onboarding session", title_equiv: ["onboarding session", "Onboarding Session"], when_phrase: "Wednesday 9am", start_iso: "2026-03-25T09:00:00", attendees: ["hr@corp.com", "new.hire@corp.com"]}
     - {title: "retro", title_equiv: ["retro", "Retrospective"], when_phrase: "Thursday 4pm", start_iso: "2026-03-26T16:00:00", attendees: ["ana@corp.com", "bo@corp.com"]}
     - {title: "budget sync", title_equiv: ["budget sync", "Budget Sync"], when_phrase: "Friday 11am", start_iso: "2026-03-20T11:00:00", attendees: ["fin1@corp.com", "fin2@corp.com"]}
-    - {title: "client kickoff", title_equiv: ["client kickoff", "Client Kickoff"], when_phrase: "next Monday 2pm", start_iso: "2026-03-30T14:00:00", attendees: ["client@partner.com", "lead@corp.com"]}
+    - {title: "client kickoff", title_equiv: ["client kickoff", "Client Kickoff"], when_phrase: "next Monday 2pm", start_iso: "2026-03-23T14:00:00", attendees: ["client@partner.com", "lead@corp.com"]}
     - {title: "code review", title_equiv: ["code review", "Code Review"], when_phrase: "Tuesday 3pm", start_iso: "2026-03-24T15:00:00", attendees: ["eng1@corp.com", "eng2@corp.com"]}
     - {title: "town hall prep", title_equiv: ["town hall prep", "Town Hall Prep"], when_phrase: "Wednesday 1pm", start_iso: "2026-03-25T13:00:00", attendees: ["comms@corp.com", "ceo@corp.com"]}
   test:
@@ -215,7 +215,7 @@ event_attendees:
     - {title: "architecture review", title_equiv: ["architecture review", "Architecture Review"], when_phrase: "Wednesday 2pm", start_iso: "2026-03-25T14:00:00", attendees: ["arch1@corp.com", "arch2@corp.com"]}
     - {title: "partner sync", title_equiv: ["partner sync", "Partner Sync"], when_phrase: "Thursday 10am", start_iso: "2026-03-26T10:00:00", attendees: ["partner1@ext.com", "biz@corp.com"]}
     - {title: "security review", title_equiv: ["security review", "Security Review"], when_phrase: "Friday 3pm", start_iso: "2026-03-20T15:00:00", attendees: ["sec1@corp.com", "sec2@corp.com"]}
-    - {title: "marketing sync", title_equiv: ["marketing sync", "Marketing Sync"], when_phrase: "next Monday 9am", start_iso: "2026-03-30T09:00:00", attendees: ["mkt1@corp.com", "mkt2@corp.com"]}
+    - {title: "marketing sync", title_equiv: ["marketing sync", "Marketing Sync"], when_phrase: "next Monday 9am", start_iso: "2026-03-23T09:00:00", attendees: ["mkt1@corp.com", "mkt2@corp.com"]}
     - {title: "quarterly planning", title_equiv: ["quarterly planning", "Quarterly Planning"], when_phrase: "Tuesday 1pm", start_iso: "2026-03-24T13:00:00", attendees: ["lead1@corp.com", "lead2@corp.com"]}
     - {title: "support triage", title_equiv: ["support triage", "Support Triage"], when_phrase: "Wednesday 10am", start_iso: "2026-03-25T10:00:00", attendees: ["sup1@corp.com", "sup2@corp.com"]}
     - {title: "product review", title_equiv: ["product review", "Product Review"], when_phrase: "Thursday 2pm", start_iso: "2026-03-26T14:00:00", attendees: ["prod1@corp.com", "prod2@corp.com"]}
@@ -227,7 +227,7 @@ event_attendees3:
     - {title: "release planning", title_equiv: ["release planning", "Release Planning"], when_phrase: "Wednesday 11am", start_iso: "2026-03-25T11:00:00", end_iso: "2026-03-25T12:00:00", attendees: ["r1@corp.com", "r2@corp.com", "r3@corp.com"]}
     - {title: "offsite planning", title_equiv: ["offsite planning", "Offsite Planning"], when_phrase: "Thursday 1pm", start_iso: "2026-03-26T13:00:00", end_iso: "2026-03-26T14:00:00", attendees: ["p1@corp.com", "p2@corp.com", "p3@corp.com"]}
     - {title: "interview panel", title_equiv: ["interview panel", "Interview Panel"], when_phrase: "Friday 10am", start_iso: "2026-03-20T10:00:00", end_iso: "2026-03-20T11:00:00", attendees: ["i1@corp.com", "i2@corp.com", "i3@corp.com"]}
-    - {title: "design crit", title_equiv: ["design crit", "Design Crit"], when_phrase: "next Monday 2pm", start_iso: "2026-03-30T14:00:00", end_iso: "2026-03-30T15:00:00", attendees: ["d1@corp.com", "d2@corp.com", "d3@corp.com"]}
+    - {title: "design crit", title_equiv: ["design crit", "Design Crit"], when_phrase: "next Monday 2pm", start_iso: "2026-03-23T14:00:00", end_iso: "2026-03-23T15:00:00", attendees: ["d1@corp.com", "d2@corp.com", "d3@corp.com"]}
     - {title: "leadership sync", title_equiv: ["leadership sync", "Leadership Sync"], when_phrase: "Tuesday 4pm", start_iso: "2026-03-24T16:00:00", end_iso: "2026-03-24T17:00:00", attendees: ["l1@corp.com", "l2@corp.com", "l3@corp.com"]}
     - {title: "training session", title_equiv: ["training session", "Training Session"], when_phrase: "Wednesday 3pm", start_iso: "2026-03-25T15:00:00", end_iso: "2026-03-25T16:00:00", attendees: ["t1@corp.com", "t2@corp.com", "t3@corp.com"]}
     - {title: "vendor review", title_equiv: ["vendor review", "Vendor Review"], when_phrase: "Thursday 9am", start_iso: "2026-03-26T09:00:00", end_iso: "2026-03-26T10:00:00", attendees: ["v1@corp.com", "v2@corp.com", "v3@corp.com"]}
@@ -237,7 +237,7 @@ event_attendees3:
     - {title: "hackathon planning", title_equiv: ["hackathon planning", "Hackathon Planning"], when_phrase: "Wednesday 1pm", start_iso: "2026-03-25T13:00:00", end_iso: "2026-03-25T14:00:00", attendees: ["z1@corp.com", "z2@corp.com", "z3@corp.com"]}
     - {title: "budget planning", title_equiv: ["budget planning", "Budget Planning"], when_phrase: "Thursday 11am", start_iso: "2026-03-26T11:00:00", end_iso: "2026-03-26T12:00:00", attendees: ["w1@corp.com", "w2@corp.com", "w3@corp.com"]}
     - {title: "candidate debrief", title_equiv: ["candidate debrief", "Candidate Debrief"], when_phrase: "Friday 2pm", start_iso: "2026-03-20T14:00:00", end_iso: "2026-03-20T15:00:00", attendees: ["q1@corp.com", "q2@corp.com", "q3@corp.com"]}
-    - {title: "strategy session", title_equiv: ["strategy session", "Strategy Session"], when_phrase: "next Monday 3pm", start_iso: "2026-03-30T15:00:00", end_iso: "2026-03-30T16:00:00", attendees: ["s1@corp.com", "s2@corp.com", "s3@corp.com"]}
+    - {title: "strategy session", title_equiv: ["strategy session", "Strategy Session"], when_phrase: "next Monday 3pm", start_iso: "2026-03-23T15:00:00", end_iso: "2026-03-23T16:00:00", attendees: ["s1@corp.com", "s2@corp.com", "s3@corp.com"]}
     - {title: "eng leads sync", title_equiv: ["eng leads sync", "Eng Leads Sync"], when_phrase: "Tuesday 9am", start_iso: "2026-03-24T09:00:00", end_iso: "2026-03-24T10:00:00", attendees: ["u1@corp.com", "u2@corp.com", "u3@corp.com"]}
     - {title: "customer QBR", title_equiv: ["customer QBR", "Customer QBR"], when_phrase: "Wednesday 4pm", start_iso: "2026-03-25T16:00:00", end_iso: "2026-03-25T17:00:00", attendees: ["c1@corp.com", "c2@corp.com", "c3@corp.com"]}
     - {title: "finance review", title_equiv: ["finance review", "Finance Review"], when_phrase: "Thursday 3pm", start_iso: "2026-03-26T15:00:00", end_iso: "2026-03-26T16:00:00", attendees: ["f1@corp.com", "f2@corp.com", "f3@corp.com"]}
@@ -308,15 +308,15 @@ calendar_carry:
     - {date: "2026-03-23", date_phrase: "Monday morning", title: "team lunch", title_equiv: ["team lunch", "lunch with the team"], start_iso: "2026-03-23T12:00:00", time_phrase: "noon"}
     - {date: "2026-03-24", date_phrase: "Tuesday afternoon", title: "vet visit", title_equiv: ["vet visit", "the vet"], start_iso: "2026-03-24T14:00:00", time_phrase: "2pm"}
     - {date: "2026-03-25", date_phrase: "Wednesday evening", title: "haircut", title_equiv: ["haircut", "hair appointment"], start_iso: "2026-03-25T18:00:00", time_phrase: "6pm"}
-    - {date: "2026-03-27", date_phrase: "Friday morning", title: "car service", title_equiv: ["car service", "car maintenance"], start_iso: "2026-03-27T09:00:00", time_phrase: "9am"}
-    - {date: "2026-03-30", date_phrase: "next Monday afternoon", title: "physio session", title_equiv: ["physio session", "physiotherapy"], start_iso: "2026-03-30T15:00:00", time_phrase: "3pm"}
+    - {date: "2026-03-20", date_phrase: "Friday morning", title: "car service", title_equiv: ["car service", "car maintenance"], start_iso: "2026-03-20T09:00:00", time_phrase: "9am"}
+    - {date: "2026-03-23", date_phrase: "next Monday afternoon", title: "physio session", title_equiv: ["physio session", "physiotherapy"], start_iso: "2026-03-23T15:00:00", time_phrase: "3pm"}
   test:
     - {date: "2026-03-24", date_phrase: "Tuesday morning", title: "doctor visit", title_equiv: ["doctor visit", "doctor"], start_iso: "2026-03-24T09:00:00", time_phrase: "9am"}
     - {date: "2026-03-26", date_phrase: "Thursday morning", title: "client call", title_equiv: ["client call", "call with the client"], start_iso: "2026-03-26T10:00:00", time_phrase: "10am"}
     - {date: "2026-03-25", date_phrase: "Wednesday afternoon", title: "eye exam", title_equiv: ["eye exam", "the eye doctor"], start_iso: "2026-03-25T14:00:00", time_phrase: "2pm"}
     - {date: "2026-03-23", date_phrase: "Monday evening", title: "gym session", title_equiv: ["gym session", "the gym"], start_iso: "2026-03-23T18:00:00", time_phrase: "6pm"}
-    - {date: "2026-03-27", date_phrase: "Friday afternoon", title: "massage", title_equiv: ["massage", "massage appointment"], start_iso: "2026-03-27T15:00:00", time_phrase: "3pm"}
-    - {date: "2026-03-30", date_phrase: "next Monday morning", title: "orientation", title_equiv: ["orientation", "new hire orientation"], start_iso: "2026-03-30T09:00:00", time_phrase: "9am"}
+    - {date: "2026-03-20", date_phrase: "Friday afternoon", title: "massage", title_equiv: ["massage", "massage appointment"], start_iso: "2026-03-20T15:00:00", time_phrase: "3pm"}
+    - {date: "2026-03-23", date_phrase: "next Monday morning", title: "orientation", title_equiv: ["orientation", "new hire orientation"], start_iso: "2026-03-23T09:00:00", time_phrase: "9am"}
 
 translate_text:
   dev:
