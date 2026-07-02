@@ -77,7 +77,7 @@ def _to_obj(text: str, leniency: str):
             pass
         try:
             return ast.literal_eval(text)
-        except (ValueError, SyntaxError):
+        except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError):
             pass
     return None
 

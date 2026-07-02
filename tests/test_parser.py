@@ -41,3 +41,9 @@ def test_lenient_rescue_saves_prose_and_single_quotes():
 
 def test_nothing_parses_garbage():
     assert parse_rescue(fx("garbage.txt"), "lenient") is None
+
+
+def test_lenient_rescue_survives_unhashable_literals():
+    # model output wrapping a call in double braces parses as a set literal
+    # in ast.literal_eval and must not crash the rescue parser
+    assert parse_rescue(fx("double_brace.txt"), "lenient") is None
