@@ -26,6 +26,15 @@ def test_framework_accepts_llama_parameters_key():
     assert parse_framework(fx("llama_toolcall.txt")).args["timezone"] == "Europe/London"
 
 
+def test_framework_accepts_llama_python_tag():
+    # <|python_tag|> is Llama's canonical tool-call token (like Qwen's
+    # <tool_call>). Without it, strict-tier attribution can't see Llama's
+    # false-triggers on abstention cases (real finding, 2026-07-02).
+    call = parse_framework(fx("llama_python_tag.txt"))
+    assert call is not None and call.tool == "search_web"
+    assert call.args["query"] == "weather in New York"
+
+
 @pytest.mark.parametrize("name", ["codeblock.txt", "mistral_style.txt", "alias_keys.txt",
                                   "prose_wrapped.txt", "single_quotes.txt", "garbage.txt"])
 def test_framework_rejects_dirty(name):
