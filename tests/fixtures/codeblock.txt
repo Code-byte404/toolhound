@@ -1,0 +1,4 @@
+Sure! Here is the call:
+```json
+{"name": "convert_currency", "arguments": {"amount": 250, "from": "USD", "to": "EUR"}}
+```
