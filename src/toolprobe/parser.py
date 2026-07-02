@@ -3,7 +3,9 @@ parse_rescue = progressively lenient salvage. Leniency is a free parameter that
 swings attribution, so both tiers' behavior is defined here exactly (§4.2):
 
 framework: single <tool_call>JSON</tool_call> block, or the whole output being
-one JSON object, with keys name (str) + arguments (dict).
+one JSON object, with key name (str) + an args dict under EITHER canonical key
+"arguments" (OpenAI/Qwen) or "parameters" (Llama). Both are well-formed native
+formats, so recognizing both keeps attribution honest across model families.
 strict rescue: + fenced code blocks, [TOOL_CALLS] prefix, tool/args and
 nested {"function": {...}} key aliases, arguments given as a JSON string.
 lenient rescue: + first balanced {...} anywhere in the text, single-quote
@@ -18,6 +20,16 @@ _TOOL_CALL_RE = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
 _FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
 
 
+def _args_field(obj: dict):
+    """Args dict under either canonical key: 'arguments' (Qwen/OpenAI) or
+    'parameters' (Llama). Returns None if neither is present."""
+    if "arguments" in obj:
+        return obj["arguments"]
+    if "parameters" in obj:
+        return obj["parameters"]
+    return None
+
+
 def parse_framework(raw: str) -> ToolCall | None:
     m = _TOOL_CALL_RE.search(raw)
     body = m.group(1) if m else raw.strip()
@@ -25,9 +37,10 @@ def parse_framework(raw: str) -> ToolCall | None:
         obj = json.loads(body)
     except json.JSONDecodeError:
         return None
-    if (isinstance(obj, dict) and isinstance(obj.get("name"), str)
-            and isinstance(obj.get("arguments"), dict)):
-        return ToolCall(tool=obj["name"], args=obj["arguments"])
+    if isinstance(obj, dict) and isinstance(obj.get("name"), str):
+        args = _args_field(obj)
+        if isinstance(args, dict):
+            return ToolCall(tool=obj["name"], args=args)
     return None
 
 
@@ -97,7 +110,9 @@ def _normalize(obj) -> ToolCall | None:
     if isinstance(obj.get("function"), dict):
         obj = obj["function"]
     name = obj.get("name") or obj.get("tool")
-    args = obj.get("arguments") if "arguments" in obj else obj.get("args")
+    args = _args_field(obj)
+    if args is None:
+        args = obj.get("args")
     if isinstance(args, str):
         try:
             args = json.loads(args)

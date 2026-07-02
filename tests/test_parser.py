@@ -16,6 +16,16 @@ def test_framework_accepts_clean_and_bare():
     assert parse_framework(fx("bare_json.txt")).args["timezone"] == "Europe/London"
 
 
+def test_framework_accepts_llama_parameters_key():
+    # Llama-3.2's canonical format uses "parameters" not "arguments" -- a valid
+    # well-formed call the framework parser must recognize, else a capable model
+    # scores 0 purely from a key-name mismatch (real finding, 2026-07-02).
+    call = parse_framework(fx("llama_bare.txt"))
+    assert call is not None and call.tool == "get_weather"
+    assert call.args["location"] == "Tokyo"
+    assert parse_framework(fx("llama_toolcall.txt")).args["timezone"] == "Europe/London"
+
+
 @pytest.mark.parametrize("name", ["codeblock.txt", "mistral_style.txt", "alias_keys.txt",
                                   "prose_wrapped.txt", "single_quotes.txt", "garbage.txt"])
 def test_framework_rejects_dirty(name):
