@@ -2,6 +2,7 @@
 (design doc §4.2 hard rule) via tokenizer.apply_chat_template(tools=...).
 Fixed date injected so 'tomorrow/Friday' cases never drift (§4.3)."""
 import json
+import re
 
 from .backend import get_tokenizer
 from .models import Case
@@ -39,11 +40,16 @@ def render(repo: str, case: Case, tools: dict[str, dict],
     return render_with_tokenizer(get_tokenizer(repo), case, tools, current_date)
 
 
+_EXAMPLE_RE = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
+
+
 def template_sanity(repo: str) -> bool:
     """Gate separating 'framework/template bug' from 'model format failure' (附三).
     Checks: (1) the official template actually renders a passed tool into the
     prompt; (2) tokenize->detokenize round-trip preserves the tool name
-    (special tokens not mangled/swallowed)."""
+    (special tokens not mangled/swallowed); (3) any tool-call format example
+    the template shows is not itself malformed -- a Jinja-escaping leak like
+    Qwen2.5's {{"name": ...}} teaches the model the wrong format."""
     tok = get_tokenizer(repo)
     probe = {"type": "function", "function": {
         "name": "probe_tool", "description": "sanity probe",
@@ -56,6 +62,8 @@ def template_sanity(repo: str) -> bool:
     except Exception:
         return False
     if "probe_tool" not in prompt:
+        return False
+    if any("{{" in ex for ex in _EXAMPLE_RE.findall(prompt)):
         return False
     ids = tok.encode(prompt)
     return "probe_tool" in tok.decode(ids)

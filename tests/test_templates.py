@@ -41,3 +41,38 @@ def test_render_passes_native_tools():
     tools = load_tools(Path(__file__).parent.parent / "cases" / "tools.yaml")
     out = render_with_tokenizer(FakeTokenizer(), CASE, tools)
     assert "TOOLS[get_weather]" in out and out.startswith("TOOLS")
+
+
+class TemplateTokenizer:
+    """Fake tokenizer whose template renders a fixed format-instruction example."""
+
+    def __init__(self, example):
+        self.example = example
+
+    def apply_chat_template(self, messages, tools=None, add_generation_prompt=True,
+                            tokenize=False):
+        name = tools[0]["function"]["name"] if tools else ""
+        return (f"system: use {name}\n"
+                f"<tool_call>\n{self.example}\n</tool_call>\nuser: hi\n")
+
+    def encode(self, text):
+        return list(text.encode())
+
+    def decode(self, ids):
+        return bytes(ids).decode()
+
+
+def test_template_sanity_ok_for_wellformed_example(monkeypatch):
+    from toolprobe import templates
+    tok = TemplateTokenizer('{"name": <function-name>, "arguments": <args-json-object>}')
+    monkeypatch.setattr(templates, "get_tokenizer", lambda repo: tok)
+    assert templates.template_sanity("any") is True
+
+
+def test_template_sanity_catches_doubled_brace_example(monkeypatch):
+    # Jinja-escaping leak observed in Qwen2.5's template: the format example
+    # renders as {{"name": ...}} and teaches small models malformed JSON.
+    from toolprobe import templates
+    tok = TemplateTokenizer('{{"name": <function-name>, "arguments": <args-json-object>}}')
+    monkeypatch.setattr(templates, "get_tokenizer", lambda repo: tok)
+    assert templates.template_sanity("any") is False

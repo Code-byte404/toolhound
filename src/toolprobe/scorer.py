@@ -11,13 +11,15 @@ from .models import ExpectedCall, ToolCall
 def score(call: ToolCall | None, expected: ExpectedCall | None,
           arg_rules: dict[str, dict[str, Any]], tools: dict[str, dict]) -> dict:
     if expected is None:
+        # layered metrics don't apply to abstention cases; they get their own
         return {
-            "parse_ok": call is not None,
             "abstention_correct": call is None,
             "false_trigger": call is not None,
         }
     if call is None:
-        return {"parse_ok": False}
+        # layered: unparseable output fails every downstream metric too
+        return {"parse_ok": False, "schema_valid": False,
+                "tool_correct": False, "args_correct": False}
     s: dict[str, Any] = {"parse_ok": True}
     s["schema_valid"] = _validate_schema(call, tools)
     s["tool_correct"] = call.tool == expected.tool

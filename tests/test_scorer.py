@@ -67,12 +67,15 @@ def test_schema_invalid_missing_required_and_bad_enum():
 def test_abstention_correct_and_false_trigger():
     s = score(None, None, {}, TOOLS)
     assert s["abstention_correct"] is True and s["false_trigger"] is False
+    assert "parse_ok" not in s  # layered metrics don't apply to abstention cases
     assert passed(s, None)
     s2 = score(ToolCall(tool="search_web", args={"query": "hi"}), None, {}, TOOLS)
     assert s2["abstention_correct"] is False and s2["false_trigger"] is True
 
 
-def test_no_call_when_expected():
+def test_no_call_when_expected_fails_all_layers():
     s = score(None, exp("get_weather", location="Tokyo"), {}, TOOLS)
-    assert s["parse_ok"] is False
+    # layered: an unparseable output fails every downstream metric too
+    assert s == {"parse_ok": False, "schema_valid": False,
+                 "tool_correct": False, "args_correct": False}
     assert not passed(s, exp("get_weather", location="Tokyo"))
