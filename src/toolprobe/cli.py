@@ -72,8 +72,10 @@ def cmd_attribute(args) -> int:
                      "parser_gap_repros": [{"case_id": r.case_id, "raw": r.raw}
                                            for r in leaf["parser_gap_repros"]]}
               for len_, leaf in report.items()}
+    env = env_header()
     (out_dir / f"attribution-{args.model}.json").write_text(
-        json.dumps({"env": env_header(), "report": serial}, indent=2))
+        json.dumps({"env": env, "report": serial}, indent=2))
+    (out_dir / f"attribution-{args.model}.md").write_text(to_markdown([], report, env))
     return 0
 
 

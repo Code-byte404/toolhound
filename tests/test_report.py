@@ -27,15 +27,29 @@ def _fake_attr_report():
     return {"strict": leaf, "lenient": leaf}
 
 
-def test_tables_and_markdown_render():
-    rows = [{"model": "qwen2.5-0.5b", "quant": "q4",
+def _rows():
+    return [{"model": "qwen2.5-0.5b", "quant": "q4",
              "parse_ok": (0.9, 0.8, 1.0), "schema_valid": (0.9, 0.8, 1.0),
              "tool_correct": (0.8, 0.6, 0.95), "args_correct": (0.7, 0.5, 0.9)}]
+
+
+def test_tables_and_markdown_render():
+    rows = _rows()
     assert reliability_table(rows) is not None
     assert attribution_table(_fake_attr_report()) is not None
     md = to_markdown(rows, _fake_attr_report(), env_header())
     assert "qwen2.5-0.5b" in md and "model_format_failure" in md
     assert "0.70" in md and "[0.50, 0.90]" in md
+
+
+def test_markdown_omits_empty_sections():
+    # run-only: reliability present, attribution absent
+    run_md = to_markdown(_rows(), {}, env_header())
+    assert "## Reliability" in run_md and "## Attribution" not in run_md
+    # attribute-only: attribution present, reliability absent
+    attr_md = to_markdown([], _fake_attr_report(), env_header())
+    assert "## Attribution" in attr_md and "## Reliability" not in attr_md
+    assert "framework_template_bug" in attr_md
 
 
 def test_env_header_records_versions():
