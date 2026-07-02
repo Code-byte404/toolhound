@@ -83,3 +83,60 @@ def test_expand_c5_abstention_has_null_expected_and_no_argrules():
     dev = expand_template(tmpl, slots, "dev")
     assert dev[0]["expected"] is None
     assert "arg_rules" not in dev[0]
+
+
+C7_TMPL = {
+    "id": "c7_time", "cat": "C7", "slot": "timezone_city",
+    "sizes": [3, 8], "count_per_size": 2, "target_tool": "get_time",
+    "catalog": ["get_weather", "search_web", "convert_currency", "send_email",
+                "create_event", "read_calendar", "translate", "get_stock"],
+    "phrasings": ["What's the time in {city}?"],
+    "expected": {"tool": "get_time", "args": {"timezone": "{timezone}"}},
+    "arg_rules": {"timezone": {"equiv_field": "timezone_equiv"}},
+}
+TZ_SLOTS = {"timezone_city": {
+    "dev": [{"city": "Sydney", "timezone": "Australia/Sydney", "timezone_equiv": ["Australia/Sydney", "Sydney"]},
+            {"city": "London", "timezone": "Europe/London", "timezone_equiv": ["Europe/London", "London"]}],
+    "test": [{"city": "New York", "timezone": "America/New_York", "timezone_equiv": ["America/New_York", "New York"]},
+             {"city": "Mumbai", "timezone": "Asia/Kolkata", "timezone_equiv": ["Asia/Kolkata", "Mumbai"]}]}}
+
+
+def test_expand_c7_sizes_and_catalog():
+    dev = expand_template(C7_TMPL, TZ_SLOTS, "dev")
+    assert len(dev) == 2 * 2  # sizes * count_per_size
+    by_size = {}
+    for c in dev:
+        by_size.setdefault(c["n_tools"], []).append(c)
+    assert set(by_size) == {3, 8}
+    for size, group in by_size.items():
+        for c in group:
+            assert len(c["tools"]) == size
+            assert c["tools"][0] == "get_time"       # target present & first
+            assert c["expected"]["tool"] == "get_time"
+    assert len({c["id"] for c in dev}) == 4          # unique ids
+
+
+def test_expand_c6_multiturn_carryover():
+    tmpl = {
+        "id": "c6_curr", "cat": "C6", "slot": "currency_carry", "count": 1,
+        "tools": ["convert_currency"],
+        "phrasings": ["unused"],
+        "turns": [
+            {"role": "user", "content": "Convert {amount} {from} to {to}."},
+            {"role": "assistant", "tool_call": {"tool": "convert_currency",
+             "args": {"amount": "{amount}", "from": "{from}", "to": "{to}"}}},
+            {"role": "tool", "content": "{result}"},
+            {"role": "user", "content": "And the same amount to {to2}?"},
+        ],
+        "expected": {"tool": "convert_currency",
+                     "args": {"amount": "{amount}", "from": "{from}", "to": "{to2}"}},
+        "arg_rules": {},
+    }
+    slots = {"currency_carry": {
+        "dev": [{"amount": 100, "from": "USD", "to": "EUR", "to2": "GBP", "result": "92.0"}],
+        "test": [{"amount": 200, "from": "CAD", "to": "USD", "to2": "MXN", "result": "148.0"}]}}
+    c = expand_template(tmpl, slots, "dev")[0]
+    assert c["turns"][0]["content"] == "Convert 100 USD to EUR."
+    assert c["turns"][1]["tool_call"]["args"]["amount"] == 100     # int preserved
+    assert c["turns"][2]["content"] == "92.0"
+    assert c["expected"]["args"] == {"amount": 100, "from": "USD", "to": "GBP"}

@@ -88,9 +88,25 @@ def expand_template(tmpl: dict, slots: dict, split: str) -> list[dict]:
             for i in range(count)]
 
 
-def _catalog(tmpl, size):  # implemented in Task 5
-    raise NotImplementedError
+def _catalog(tmpl: dict, size: int) -> list[str]:  # implemented in Task 5
+    target = tmpl["target_tool"]
+    distractors = [t for t in tmpl["catalog"] if t != target]
+    if size - 1 > len(distractors):
+        raise ValueError(f"{tmpl['id']}: size {size} needs {size-1} distractors, "
+                         f"have {len(distractors)}")
+    return [target] + distractors[:size - 1]
 
 
-def _expand_c7(tmpl, slots, split):  # implemented in Task 5
-    raise NotImplementedError
+def _expand_c7(tmpl: dict, slots: dict, split: str) -> list[dict]:  # implemented in Task 5
+    bindings = slots[tmpl["slot"]][split]
+    phrasings = tmpl["phrasings"]
+    s, p = len(bindings), len(phrasings)
+    n = tmpl["count_per_size"]
+    if n > s * p:
+        raise ValueError(f"{tmpl['id']}/{split}: count_per_size {n} exceeds {s}*{p}")
+    cases = []
+    for size in tmpl["sizes"]:
+        for i in range(n):
+            cases.append(_make_case(tmpl, bindings[i % s], phrasings[(i // s) % p],
+                                    split, i, "C7", size=size))
+    return cases
