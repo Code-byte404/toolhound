@@ -1,0 +1,29 @@
+[project]
+name = "mlx-toolprobe"
+version = "0.1.0"
+description = "MLX-native tool-calling reliability diagnostics for small models"
+requires-python = ">=3.11"
+dependencies = [
+    "mlx",
+    "mlx-lm",
+    "pydantic>=2",
+    "rich",
+    "numpy",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+toolprobe = "toolprobe.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/toolprobe"]
+
+[tool.ruff]
+line-length = 100
