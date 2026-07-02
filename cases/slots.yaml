@@ -138,7 +138,7 @@ event_solo:
     - {title: "product demo", title_equiv: ["product demo", "Product Demo"], when_phrase: "tomorrow at 1pm", start_iso: "2026-03-21T13:00:00"}
     - {title: "eye exam", title_equiv: ["eye exam", "Eye Exam"], when_phrase: "Monday at 3pm", start_iso: "2026-03-23T15:00:00"}
     - {title: "performance review", title_equiv: ["performance review", "Performance Review"], when_phrase: "Tuesday at 10am", start_iso: "2026-03-24T10:00:00"}
-    - {title: "vet visit", title_equiv: ["vet visit", "Vet Visit"], when_phrase: "Wednesday at 8am", start_iso: "2026-03-25T08:00:00"}
+    - {title: "grooming appointment", title_equiv: ["grooming appointment", "Grooming Appointment"], when_phrase: "Wednesday at 8am", start_iso: "2026-03-25T08:00:00"}
 
 currency:
   dev:
@@ -210,7 +210,7 @@ event_attendees:
     - {title: "code review", title_equiv: ["code review", "Code Review"], when_phrase: "Tuesday 3pm", start_iso: "2026-03-24T15:00:00", attendees: ["eng1@corp.com", "eng2@corp.com"]}
     - {title: "town hall prep", title_equiv: ["town hall prep", "Town Hall Prep"], when_phrase: "Wednesday 1pm", start_iso: "2026-03-25T13:00:00", attendees: ["comms@corp.com", "ceo@corp.com"]}
   test:
-    - {title: "roadmap review", title_equiv: ["roadmap review", "Roadmap Review"], when_phrase: "Monday 11am", start_iso: "2026-03-23T11:00:00", attendees: ["ana@corp.com", "bo@corp.com"]}
+    - {title: "roadmap review", title_equiv: ["roadmap review", "Roadmap Review"], when_phrase: "Monday 11am", start_iso: "2026-03-23T11:00:00", attendees: ["road1@corp.com", "road2@corp.com"]}
     - {title: "hiring debrief", title_equiv: ["hiring debrief", "Hiring Debrief"], when_phrase: "Tuesday 9am", start_iso: "2026-03-24T09:00:00", attendees: ["hr2@corp.com", "mgr@corp.com"]}
     - {title: "architecture review", title_equiv: ["architecture review", "Architecture Review"], when_phrase: "Wednesday 2pm", start_iso: "2026-03-25T14:00:00", attendees: ["arch1@corp.com", "arch2@corp.com"]}
     - {title: "partner sync", title_equiv: ["partner sync", "Partner Sync"], when_phrase: "Thursday 10am", start_iso: "2026-03-26T10:00:00", attendees: ["partner1@ext.com", "biz@corp.com"]}
@@ -295,11 +295,11 @@ currency_carry:
     - {amount: 1000, from: "SGD", to: "AUD", to2: "NZD", result: "1120.0"}
     - {amount: 300, from: "AUD", to: "USD", to2: "CAD", result: "198.0"}
   test:
-    - {amount: 200, from: "CAD", to: "USD", to2: "MXN", result: "148.0"}
-    - {amount: 150, from: "USD", to: "EUR", to2: "GBP", result: "138.0"}
-    - {amount: 600, from: "JPY", to: "GBP", to2: "USD", result: "4.02"}
-    - {amount: 90, from: "CHF", to: "EUR", to2: "GBP", result: "86.1"}
-    - {amount: 700, from: "NZD", to: "SGD", to2: "AUD", result: "584.5"}
+    - {amount: 200, from: "CAD", to: "CHF", to2: "EUR", result: "148.0"}
+    - {amount: 150, from: "AUD", to: "NZD", to2: "SGD", result: "162.0"}
+    - {amount: 600, from: "JPY", to: "USD", to2: "EUR", result: "4.02"}
+    - {amount: 90, from: "CHF", to: "GBP", to2: "USD", result: "79.2"}
+    - {amount: 700, from: "NZD", to: "AUD", to2: "USD", result: "630.0"}
     - {amount: 400, from: "USD", to: "AUD", to2: "CAD", result: "608.0"}
 
 calendar_carry:
