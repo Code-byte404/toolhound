@@ -1,0 +1,38 @@
+city:
+  dev:
+    - {location: "Tokyo", location_equiv: ["Tokyo", "Tokyo, Japan", "tokyo"]}
+    - {location: "Paris", location_equiv: ["Paris", "Paris, France"]}
+    - {location: "Seattle", location_equiv: ["Seattle", "Seattle, WA"]}
+  test:
+    - {location: "Berlin", location_equiv: ["Berlin", "Berlin, Germany"]}
+    - {location: "Madrid", location_equiv: ["Madrid", "Madrid, Spain"]}
+    - {location: "Toronto", location_equiv: ["Toronto", "Toronto, Canada"]}
+timezone_city:
+  dev:
+    - {city: "Sydney", timezone: "Australia/Sydney", timezone_equiv: ["Australia/Sydney", "Sydney"]}
+    - {city: "London", timezone: "Europe/London", timezone_equiv: ["Europe/London", "London", "GMT", "BST"]}
+  test:
+    - {city: "New York", timezone: "America/New_York", timezone_equiv: ["America/New_York", "New York", "EST", "EDT"]}
+    - {city: "Mumbai", timezone: "Asia/Kolkata", timezone_equiv: ["Asia/Kolkata", "Mumbai", "IST"]}
+currency:
+  dev:
+    - {amount: 250, from: "USD", to: "EUR", from_equiv: ["USD", "US dollars", "dollar"], to_equiv: ["EUR", "euros", "euro"]}
+    - {amount: 1000, from: "JPY", to: "GBP", from_equiv: ["JPY", "yen"], to_equiv: ["GBP", "pounds", "pound"]}
+  test:
+    - {amount: 500, from: "CAD", to: "CHF", from_equiv: ["CAD", "Canadian dollars"], to_equiv: ["CHF", "francs", "Swiss francs"]}
+    - {amount: 75, from: "AUD", to: "NZD", from_equiv: ["AUD", "Australian dollars"], to_equiv: ["NZD", "New Zealand dollars"]}
+currency_carry:
+  dev:
+    - {amount: 100, from: "USD", to: "EUR", to2: "GBP", result: "92.0"}
+  test:
+    - {amount: 200, from: "CAD", to: "USD", to2: "MXN", result: "148.0"}
+reminder:
+  dev:
+    - {text: "call mom", text_equiv: ["call mom", "Call mom"], when_phrase: "tomorrow at 6pm", when_iso: "2026-03-21T18:00:00"}
+  test:
+    - {text: "water the plants", text_equiv: ["water the plants", "Water the plants"], when_phrase: "tomorrow at 8am", when_iso: "2026-03-21T08:00:00"}
+event_attendees:
+  dev:
+    - {title: "design review", title_equiv: ["design review", "Design Review"], when_phrase: "Friday 2pm", start_iso: "2026-03-20T14:00:00", attendees: ["sam@corp.com", "lee@corp.com"]}
+  test:
+    - {title: "budget sync", title_equiv: ["budget sync", "Budget Sync"], when_phrase: "Monday 11am", start_iso: "2026-03-23T11:00:00", attendees: ["ana@corp.com", "bo@corp.com"]}
