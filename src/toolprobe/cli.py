@@ -1,4 +1,4 @@
-"""CLI: toolprobe run / attribute."""
+"""CLI: toolprobe run / attribute. --model accepts a comma-separated list."""
 import argparse
 import json
 from pathlib import Path
@@ -18,9 +18,23 @@ MODELS = {
                      "q4": "mlx-community/Qwen2.5-0.5B-Instruct-4bit"},
     "qwen2.5-1.5b": {"bf16": "mlx-community/Qwen2.5-1.5B-Instruct-bf16",
                      "q4": "mlx-community/Qwen2.5-1.5B-Instruct-4bit"},
+    "llama-3.2-3b": {"bf16": "mlx-community/Llama-3.2-3B-Instruct-bf16",
+                     "q4": "mlx-community/Llama-3.2-3B-Instruct-4bit"},
 }
 TOOLS_PATH = Path("cases/tools.yaml")
 console = Console()
+
+
+def _models_arg(s: str) -> list[str]:
+    names = s.split(",")
+    unknown = [n for n in names if n not in MODELS]
+    if unknown:
+        raise SystemExit(f"unknown model(s) {unknown}; choose from {', '.join(MODELS)}")
+    return names
+
+
+def _label(models: list[str]) -> str:
+    return "+".join(models)
 
 
 def _run_one(repo: str, cases, tools) -> dict:
@@ -43,53 +57,66 @@ def _aggregate(model: str, quant: str, result: dict) -> dict:
 
 def cmd_run(args) -> int:
     cases, tools = load_cases(args.cases), load_tools(TOOLS_PATH)
+    models = _models_arg(args.model)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    data = {"env": env_header(), "model": args.model, "cases_file": args.cases, "quants": {}}
+    env = env_header()
+    data = {"env": env, "cases_file": args.cases, "models": {}}
     rows = []
-    for quant in args.quant.split(","):
-        repo = MODELS[args.model][quant]
-        result = _run_one(repo, cases, tools)
-        result["repo"] = repo
-        data["quants"][quant] = result
-        rows.append(_aggregate(args.model, quant, result))
+    for model in models:
+        data["models"][model] = {"quants": {}}
+        for quant in args.quant.split(","):
+            repo = MODELS[model][quant]
+            result = _run_one(repo, cases, tools)
+            result["repo"] = repo
+            data["models"][model]["quants"][quant] = result
+            rows.append(_aggregate(model, quant, result))
     console.print(reliability_table(rows))
-    (out_dir / f"run-{args.model}.json").write_text(json.dumps(data, indent=2))
-    (out_dir / f"run-{args.model}.md").write_text(to_markdown(rows, {}, data["env"]))
+    label = _label(models)
+    (out_dir / f"run-{label}.json").write_text(json.dumps(data, indent=2))
+    (out_dir / f"run-{label}.md").write_text(to_markdown(rows, {}, env))
     return 0
+
+
+def _serialize_report(report: dict) -> dict:
+    return {len_: {"per_quant": {q: {c.value: n for c, n in cnt.items()}
+                                 for q, cnt in leaf["per_quant"].items()},
+                   "quant_delta": {c.value: d for c, d in leaf["quant_delta"].items()},
+                   "parser_gap_repros": [{"case_id": r.case_id, "raw": r.raw}
+                                         for r in leaf["parser_gap_repros"]]}
+            for len_, leaf in report.items()}
 
 
 def cmd_attribute(args) -> int:
     cases, tools = load_cases(args.cases), load_tools(TOOLS_PATH)
-    repos = MODELS[args.model]
-    report = build_attribution(repos["bf16"], repos["q4"], cases, tools)
-    console.print(attribution_table(report))
+    models = _models_arg(args.model)
+    env = env_header()
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    serial = {len_: {"per_quant": {q: {c.value: n for c, n in cnt.items()}
-                                   for q, cnt in leaf["per_quant"].items()},
-                     "quant_delta": {c.value: d for c, d in leaf["quant_delta"].items()},
-                     "parser_gap_repros": [{"case_id": r.case_id, "raw": r.raw}
-                                           for r in leaf["parser_gap_repros"]]}
-              for len_, leaf in report.items()}
-    env = env_header()
-    (out_dir / f"attribution-{args.model}.json").write_text(
-        json.dumps({"env": env, "report": serial}, indent=2))
-    (out_dir / f"attribution-{args.model}.md").write_text(to_markdown([], report, env))
+    for model in models:
+        repos = MODELS[model]
+        report = build_attribution(repos["bf16"], repos["q4"], cases, tools)
+        console.print(f"[bold]{model}[/bold]")
+        console.print(attribution_table(report))
+        (out_dir / f"attribution-{model}.json").write_text(
+            json.dumps({"env": env, "model": model, "report": _serialize_report(report)},
+                       indent=2))
+        (out_dir / f"attribution-{model}.md").write_text(to_markdown([], report, env))
     return 0
 
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="toolprobe")
     sub = p.add_subparsers(dest="cmd", required=True)
+    models_help = f"comma-separated; choose from: {', '.join(MODELS)}"
     r = sub.add_parser("run")
-    r.add_argument("--model", required=True, choices=MODELS)
+    r.add_argument("--model", required=True, help=models_help)
     r.add_argument("--quant", default="q4")
     r.add_argument("--cases", default="cases/default.jsonl")
     r.add_argument("--out", default="reports")
     r.set_defaults(fn=cmd_run)
     a = sub.add_parser("attribute")
-    a.add_argument("--model", required=True, choices=MODELS)
+    a.add_argument("--model", required=True, help=models_help)
     a.add_argument("--cases", default="cases/default.jsonl")
     a.add_argument("--out", default="reports")
     a.set_defaults(fn=cmd_attribute)
