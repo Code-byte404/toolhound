@@ -1,0 +1,1 @@
+{'name': 'get_stock', 'arguments': {'symbol': 'AAPL'}}
