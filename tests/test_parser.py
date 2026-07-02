@@ -43,7 +43,12 @@ def test_nothing_parses_garbage():
     assert parse_rescue(fx("garbage.txt"), "lenient") is None
 
 
-def test_lenient_rescue_survives_unhashable_literals():
-    # model output wrapping a call in double braces parses as a set literal
-    # in ast.literal_eval and must not crash the rescue parser
-    assert parse_rescue(fx("double_brace.txt"), "lenient") is None
+def test_lenient_rescue_dedupes_doubled_braces():
+    # Qwen2.5's chat template teaches a doubled-brace example ({{"name": ...}})
+    # and small models copy it literally. En route the set-literal parse raises
+    # TypeError in ast.literal_eval (must not crash); the lenient tier's
+    # brace-dedup candidate must then recover the intended call.
+    call = parse_rescue(fx("double_brace.txt"), "lenient")
+    assert call is not None and call.tool == "get_time"
+    assert call.args["timezone"] == "UTC"
+    assert parse_rescue(fx("double_brace.txt"), "strict") is None

@@ -40,16 +40,25 @@ def parse_rescue(raw: str, leniency: str = "lenient") -> ToolCall | None:
 
 
 def _candidates(raw: str, leniency: str):
+    base = []
     m = _TOOL_CALL_RE.search(raw)
     if m:
-        yield m.group(1)
+        base.append(m.group(1))
     stripped = raw.strip()
     if stripped.startswith("[TOOL_CALLS]"):
-        yield stripped.removeprefix("[TOOL_CALLS]").strip()
-    yield from _FENCE_RE.findall(raw)
-    yield stripped
+        base.append(stripped.removeprefix("[TOOL_CALLS]").strip())
+    base.extend(_FENCE_RE.findall(raw))
+    base.append(stripped)
+    yield from base
     if leniency == "lenient":
-        yield from _balanced_objects(raw)
+        balanced = list(_balanced_objects(raw))
+        yield from balanced
+        # doubled-brace dedup: buggy chat templates (e.g. Qwen2.5) teach
+        # {{"name": ...}} and small models copy it literally. Tried last so
+        # well-formed candidates always win first.
+        for c in base + balanced:
+            if "{{" in c:
+                yield c.replace("{{", "{").replace("}}", "}")
 
 
 def _balanced_objects(raw: str):
