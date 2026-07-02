@@ -1,0 +1,61 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What This Is
+
+**toolprobe** (`mlx-toolprobe`) — an MLX-native, reproducible diagnostic harness for tool-calling reliability of small (≤8B) models on Apple Silicon. Given `(model, quantization)`, it produces a reliability table (`parse_ok → schema_valid → tool_correct → args_correct`, each with bootstrap 95% CIs) and attributes every failure to one of four causes: `framework_template_bug` / `framework_parser_gap` (upstream's fault, reportable) vs `model_format_failure` / `model_decision_failure` (the model's fault).
+
+Design docs (source of truth for intent, metrics, acceptance criteria) live one directory up: `../toolprobe-开发文档-v2.md` (why) and `../toolprobe-技术实现文档.md` (how).
+
+## Commands
+
+```bash
+conda activate toolprobe                 # Python 3.11 env (arm64)
+pip install -e ".[dev]"
+
+pytest                                   # logic tests only (no MLX needed; default -m "not mlx")
+pytest -m mlx                            # end-to-end tests, Apple Silicon + downloaded models
+pytest tests/test_scorer.py -v           # single file
+ruff check .
+
+python scripts/smoke.py                  # bare MLX generation sanity check
+
+toolprobe run --model qwen2.5-0.5b --quant bf16,q4 --cases cases/default.jsonl
+toolprobe attribute --model qwen2.5-0.5b # four-cause table, strict + lenient parser tiers
+```
+
+Reports land in `reports/` (`.md` committed, `.json` gitignored).
+
+## Architecture
+
+Data flow: `case → templates.render → runner.run_free → parser → scorer → attribution → report`.
+
+- `src/toolprobe/backend.py` — **the ONLY module allowed to import mlx/mlx_lm** (enforced by `tests/test_hygiene.py`). Verify mlx-lm call signatures against the installed version before changing (`pip show mlx-lm`, `inspect.signature`); APIs drift.
+- `models.py` — pydantic `Case`/`Turn`/`ExpectedCall`/`ToolCall`; `load_cases` (jsonl), `load_tools` (yaml → OpenAI-style function dicts).
+- `templates.py` — fair-prompt rendering via each model's own `apply_chat_template(tools=...)`; injects `FIXED_DATE = 2026-03-20` (Friday — gold datetimes in cases assume it); `template_sanity` gates the template-bug attribution branch.
+- `parser.py` — `parse_framework` (strict, models what framework tooling accepts) + `parse_rescue` with **exactly defined** `strict`/`lenient` tiers. Parser leniency swings attribution, so both tiers' behavior is documented in the module docstring and attribution always reports both.
+- `scorer.py` — strict layered judge. Args never compare by bare string equality: `arg_rules` (`equiv`/`match: set`/`match: semantic` (Jaccard ≥0.5, v1 stand-in for embeddings)/`normalize: iso8601_minute`). Abstention cases score `abstention_correct`/`false_trigger` only, never the layered metrics.
+- `attribution.py` — the four-cause decision tree (design doc 附三) + `build_attribution` (bf16 vs q4 with `assert_same_template` confound guard, quant deltas, parser-gap repros for upstream issues).
+- `report.py` — seeded bootstrap CIs (variance comes from the case set; temp=0 is deterministic, never "multi-seed"), rich tables, markdown with env/version reproducibility header.
+- `cli.py` — `run`/`attribute` subcommands + `MODELS` registry (HF repo pairs; both quants must share a chat template).
+
+Core principle: **parser is lenient ("宽进"), scorer is strict ("严判")** — their decoupling is what makes attribution valid.
+
+## Testing Rules
+
+- Logic modules (parser/scorer/attribution/report/models/templates-rendering) are pure and tested with synthetic fixtures in `tests/fixtures/` — one per attribution branch. These run anywhere, no MLX.
+- Anything touching a real model is `@pytest.mark.mlx` (excluded by default via pytest.ini).
+- TDD: failing test first, minimal fix, rerun. Attribution branches especially must stay locked by tests.
+
+## Known Findings (do not "fix" as if they were our bugs)
+
+- Qwen2.5's chat template (upstream + mlx-community copies) renders its tool-call format example with doubled braces `{{"name": ...}}` — a template bug that small models copy literally. `template_sanity` intentionally returns **False** for these repos (that's the `FRAMEWORK_TEMPLATE_BUG` classification working), and the lenient rescue tier dedupes doubled braces. See `tests/test_templates_mlx.py`.
+
+## Hard Rules (from the design docs — violating these invalidates results)
+
+- Fair prompt: each model is tested with its own chat template's tool format; never a hand-rolled one.
+- bf16 vs q4 comparisons must pass `assert_same_template` (only weight precision may differ).
+- `temperature=0`, fixed injected date; CIs from bootstrap over cases with a seeded RNG.
+- Attribution is always reported under both `strict` and `lenient` parser tiers.
+- v2 scope (PA-Tool/TSCG integration) requires dev/test case-set separation; constrained decoding is a reserved seam (`backend.generate(grammar=...)` raises `NotImplementedError`).
