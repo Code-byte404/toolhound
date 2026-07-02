@@ -21,9 +21,12 @@ ruff check .
 
 python scripts/smoke.py                  # bare MLX generation sanity check
 
-toolprobe run --model qwen2.5-0.5b --quant bf16,q4 --cases cases/default.jsonl
-toolprobe attribute --model qwen2.5-0.5b # four-cause table, strict + lenient parser tiers
+# --model takes a comma-separated list; run emits one combined table
+toolprobe run --model qwen2.5-0.5b,qwen2.5-1.5b,llama-3.2-3b --quant bf16,q4 --cases cases/default.jsonl
+toolprobe attribute --model qwen2.5-0.5b,qwen2.5-1.5b,llama-3.2-3b # four-cause table per model, strict + lenient tiers
 ```
+
+Registered models (`cli.MODELS`, all non-gated, bf16+q4 templates verified matching): `qwen2.5-0.5b`, `qwen2.5-1.5b`, `llama-3.2-3b`. Adding a model requires: non-gated on HF, bf16/q4 share a chat template, and the tokenizer supports `tools=` (Phi-3.5 was rejected for lacking native tool-template support).
 
 Reports land in `reports/` (`.md` committed, `.json` gitignored).
 
@@ -48,9 +51,13 @@ Core principle: **parser is lenient ("宽进"), scorer is strict ("严判")** �
 - Anything touching a real model is `@pytest.mark.mlx` (excluded by default via pytest.ini).
 - TDD: failing test first, minimal fix, rerun. Attribution branches especially must stay locked by tests.
 
-## Known Findings (do not "fix" as if they were our bugs)
+## Known Findings
 
-- Qwen2.5's chat template (upstream + mlx-community copies) renders its tool-call format example with doubled braces `{{"name": ...}}` — a template bug that small models copy literally. `template_sanity` intentionally returns **False** for these repos (that's the `FRAMEWORK_TEMPLATE_BUG` classification working), and the lenient rescue tier dedupes doubled braces. See `tests/test_templates_mlx.py`.
+**Model/template quirks the harness surfaced (don't "fix" the first as if it were ours):**
+- Qwen2.5's chat template (upstream + mlx-community copies) renders its tool-call format example with doubled braces `{{"name": ...}}` — a template bug small models copy literally. `template_sanity` intentionally returns **False** for these repos (the `FRAMEWORK_TEMPLATE_BUG` classification working), and the lenient rescue tier dedupes doubled braces. See `tests/test_templates_mlx.py`.
+- Llama-3.2 uses `parameters` (not `arguments`) as its args key and wraps calls in `<|python_tag|>` (not `<tool_call>`). Both are Llama's **canonical** formats, so `parse_framework` recognizes them — otherwise a capable model scores 0 purely from a family-format mismatch. If you add a new model family, check its native key/wrapper and extend `parser.py` (with a fixture + test) rather than loosening the scorer.
+
+**First 3-model result (Qwen2.5-0.5B / 1.5B, Llama-3.2-3B; deterministic, reproducible):** each family has a *different* dominant failure cause — 0.5B is mostly `framework_template_bug`, 1.5B mostly `model_decision_failure` (outgrows the template bug), Llama entirely `model_decision_failure` (wrong arg types + abstention false-triggers). This cross-family contrast is the point of running ≥3 models; see `reports/`.
 
 ## Hard Rules (from the design docs — violating these invalidates results)
 
