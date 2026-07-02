@@ -1,0 +1,117 @@
+get_weather:
+  description: Get current weather for a location
+  parameters:
+    type: object
+    properties:
+      location: {type: string}
+      unit: {type: string, enum: [celsius, fahrenheit]}
+    required: [location]
+convert_currency:
+  description: Convert an amount between currencies
+  parameters:
+    type: object
+    properties:
+      amount: {type: number}
+      from: {type: string}
+      to: {type: string}
+    required: [amount, from, to]
+create_reminder:
+  description: Create a reminder at a specific time
+  parameters:
+    type: object
+    properties:
+      text: {type: string}
+      datetime: {type: string, description: ISO 8601}
+    required: [text, datetime]
+send_email:
+  description: Send an email
+  parameters:
+    type: object
+    properties:
+      to: {type: string}
+      subject: {type: string}
+      body: {type: string}
+    required: [to, subject, body]
+search_web:
+  description: Search the web
+  parameters:
+    type: object
+    properties:
+      query: {type: string}
+    required: [query]
+get_time:
+  description: Get the current time in a timezone
+  parameters:
+    type: object
+    properties:
+      timezone: {type: string}
+    required: [timezone]
+create_event:
+  description: Create a calendar event
+  parameters:
+    type: object
+    properties:
+      title: {type: string}
+      start: {type: string, description: ISO 8601}
+      end: {type: string, description: ISO 8601}
+      attendees: {type: array, items: {type: string}}
+    required: [title, start]
+read_calendar:
+  description: Read calendar events for a date
+  parameters:
+    type: object
+    properties:
+      date: {type: string, description: YYYY-MM-DD}
+    required: [date]
+set_alarm:
+  description: Set an alarm
+  parameters:
+    type: object
+    properties:
+      time: {type: string}
+    required: [time]
+play_music:
+  description: Play a song or playlist
+  parameters:
+    type: object
+    properties:
+      query: {type: string}
+    required: [query]
+get_stock:
+  description: Get a stock quote
+  parameters:
+    type: object
+    properties:
+      symbol: {type: string}
+    required: [symbol]
+translate:
+  description: Translate text to a target language
+  parameters:
+    type: object
+    properties:
+      text: {type: string}
+      target_lang: {type: string}
+    required: [text, target_lang]
+get_directions:
+  description: Get directions between two places
+  parameters:
+    type: object
+    properties:
+      origin: {type: string}
+      destination: {type: string}
+    required: [origin, destination]
+take_note:
+  description: Save a note
+  parameters:
+    type: object
+    properties:
+      text: {type: string}
+    required: [text]
+toggle_light:
+  description: Turn a smart light on or off
+  parameters:
+    type: object
+    properties:
+      room: {type: string}
+      state: {type: string, enum: ["on", "off"]}
+    required: [room, state]
