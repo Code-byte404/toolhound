@@ -1,0 +1,3 @@
+{"id":"c1_weather_01","cat":"C1","tools":["get_weather"],"turns":[{"role":"user","content":"What's the weather in Tokyo right now?"}],"expected":{"tool":"get_weather","args":{"location":"Tokyo"}},"arg_rules":{"location":{"equiv":["Tokyo","Tokyo, Japan","tokyo"]}}}
+{"id":"c3_args_01","cat":"C3","tools":["convert_currency"],"turns":[{"role":"user","content":"How much is 250 US dollars in euros?"}],"expected":{"tool":"convert_currency","args":{"amount":250,"from":"USD","to":"EUR"}},"arg_rules":{"from":{"equiv":["USD","US dollars","dollar"]},"to":{"equiv":["EUR","euros","euro"]}}}
+{"id":"c5_abstain_01","cat":"C5","tools":["get_weather","convert_currency","search_web"],"turns":[{"role":"user","content":"Thanks, that's really helpful!"}],"expected":null,"note":"纯寒暄，不该调用任何工具"}
