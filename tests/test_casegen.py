@@ -151,6 +151,17 @@ def test_generate_all_splits_and_families():
     assert {c["family"] for c in dev} == {"c1_weather", "c7_time"}
 
 
+def test_handwritten_present_and_split_tagged():
+    from toolprobe.models import load_cases
+    dev = load_cases(CASES / "dev.jsonl")
+    test = load_cases(CASES / "test.jsonl")
+    hand = [c for c in dev + test if c.family == "handwritten"]
+    assert len(hand) >= 15
+    assert all(c.split in ("dev", "test") for c in hand)
+    # every handwritten case is C5 (abstain) or C6 (multi-turn)
+    assert all(c.cat in ("C5", "C6") for c in hand)
+
+
 def test_real_templates_hit_distribution():
     from collections import Counter
     templates = load_templates(CASES / "templates.yaml")
