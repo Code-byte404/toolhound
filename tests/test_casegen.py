@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from toolprobe.casegen import load_slots, subst, expand_template
+from toolprobe.casegen import generate_all, load_slots, load_templates, subst, expand_template
 
 CASES = Path(__file__).parent.parent / "cases"
 
@@ -140,3 +140,25 @@ def test_expand_c6_multiturn_carryover():
     assert c["turns"][1]["tool_call"]["args"]["amount"] == 100     # int preserved
     assert c["turns"][2]["content"] == "92.0"
     assert c["expected"]["args"] == {"amount": 100, "from": "USD", "to": "GBP"}
+
+
+def test_generate_all_splits_and_families():
+    templates = [C1_TMPL, C7_TMPL]
+    slots = {**SLOTS, **TZ_SLOTS}
+    dev, test = generate_all(templates, slots)
+    assert len(dev) == 3 + 4 and len(test) == 3 + 4
+    assert all(c["split"] == "dev" for c in dev)
+    assert {c["family"] for c in dev} == {"c1_weather", "c7_time"}
+
+
+def test_real_templates_hit_distribution():
+    from collections import Counter
+    templates = load_templates(CASES / "templates.yaml")
+    slots = load_slots(CASES / "slots.yaml")
+    dev, test = generate_all(templates, slots)
+    total = Counter(c["cat"] for c in dev + test)
+    targets = {"C1": 40, "C2": 45, "C3": 55, "C4": 35, "C5": 40, "C6": 30, "C7": 55}
+    for cat, want in targets.items():
+        # templated-only lower bound (handwritten in Task 7 tops up C5/C6)
+        assert total[cat] >= want - 12, f"{cat}: got {total[cat]}, want ~{want}"
+    assert 250 <= sum(total.values()) <= 320

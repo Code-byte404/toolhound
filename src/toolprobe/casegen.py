@@ -110,3 +110,11 @@ def _expand_c7(tmpl: dict, slots: dict, split: str) -> list[dict]:  # implemente
             cases.append(_make_case(tmpl, bindings[i % s], phrasings[(i // s) % p],
                                     split, i, "C7", size=size))
     return cases
+
+
+def generate_all(templates: list[dict], slots: dict) -> tuple[list[dict], list[dict]]:
+    dev, test = [], []
+    for tmpl in templates:
+        dev.extend(expand_template(tmpl, slots, "dev"))
+        test.extend(expand_template(tmpl, slots, "test"))
+    return dev, test
