@@ -2,10 +2,11 @@
 parse_rescue = progressively lenient salvage. Leniency is a free parameter that
 swings attribution, so both tiers' behavior is defined here exactly (§4.2):
 
-framework: single <tool_call>JSON</tool_call> block, or the whole output being
-one JSON object, with key name (str) + an args dict under EITHER canonical key
-"arguments" (OpenAI/Qwen) or "parameters" (Llama). Both are well-formed native
-formats, so recognizing both keeps attribution honest across model families.
+framework: a <tool_call>JSON</tool_call> block, a <|python_tag|>JSON tail
+(Llama's canonical tool token), or the whole output being one JSON object --
+with key name (str) + an args dict under EITHER canonical key "arguments"
+(OpenAI/Qwen) or "parameters" (Llama). These are all well-formed native
+formats, so recognizing them keeps attribution honest across model families.
 strict rescue: + fenced code blocks, [TOOL_CALLS] prefix, tool/args and
 nested {"function": {...}} key aliases, arguments given as a JSON string.
 lenient rescue: + first balanced {...} anywhere in the text, single-quote
@@ -30,13 +31,31 @@ def _args_field(obj: dict):
     return None
 
 
-def parse_framework(raw: str) -> ToolCall | None:
-    m = _TOOL_CALL_RE.search(raw)
-    body = m.group(1) if m else raw.strip()
+def _strict_json(text: str):
     try:
-        obj = json.loads(body)
+        return json.loads(text)
     except json.JSONDecodeError:
         return None
+
+
+def _leading_json(text: str):
+    """Parse a leading JSON object, tolerating trailing special tokens
+    (e.g. Llama's <|eom_id|>) after the <|python_tag|> call."""
+    try:
+        obj, _ = json.JSONDecoder().raw_decode(text.strip())
+        return obj
+    except json.JSONDecodeError:
+        return None
+
+
+def parse_framework(raw: str) -> ToolCall | None:
+    m = _TOOL_CALL_RE.search(raw)
+    if m:
+        obj = _strict_json(m.group(1))
+    elif "<|python_tag|>" in raw:
+        obj = _leading_json(raw.split("<|python_tag|>", 1)[1])
+    else:
+        obj = _strict_json(raw.strip())
     if isinstance(obj, dict) and isinstance(obj.get("name"), str):
         args = _args_field(obj)
         if isinstance(args, dict):
