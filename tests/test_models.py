@@ -17,11 +17,19 @@ def test_load_default_cases():
 
 def test_load_tools_openai_shape():
     tools = load_tools(CASES / "tools.yaml")
-    assert len(tools) == 15
+    assert len(tools) == 32
     gw = tools["get_weather"]
     assert gw["type"] == "function"
     assert gw["function"]["name"] == "get_weather"
     assert gw["function"]["parameters"]["required"] == ["location"]
+
+
+def test_palette_has_confusable_clusters():
+    tools = load_tools(CASES / "tools.yaml")
+    for name in ["send_email", "send_sms", "send_slack_message",
+                 "create_event", "create_reminder", "set_alarm",
+                 "play_music", "play_video", "set_volume"]:
+        assert name in tools, f"missing clustered tool {name}"
 
 
 def test_every_case_tool_exists_in_palette():
