@@ -6,13 +6,15 @@ CASES = Path(__file__).parent.parent / "cases"
 
 
 def test_load_default_cases():
-    cases = load_cases(CASES / "default.jsonl")
-    assert len(cases) == 21
-    byid = {c.id: c for c in cases}
-    assert byid["c1_weather_01"].expected.tool == "get_weather"
-    assert byid["c5_abstain_01"].expected is None
-    assert byid["c6_multi_01"].turns[1].tool_call["tool"] == "read_calendar"
-    assert byid["c7_scale_15_01"].n_tools == 15
+    dev = load_cases(CASES / "dev.jsonl")
+    test = load_cases(CASES / "test.jsonl")
+    default = load_cases(CASES / "default.jsonl")
+    # default.jsonl is exactly the dev+test union
+    assert len(default) == len(dev) + len(test)
+    assert 280 <= len(default) <= 330
+    # provenance survives round-trip through jsonl
+    assert {c.split for c in default} == {"dev", "test"}
+    assert all(c.family for c in default)
 
 
 def test_load_tools_openai_shape():
