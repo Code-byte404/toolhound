@@ -67,20 +67,24 @@ def attribution_table(report: dict) -> Table:
 
 
 def to_markdown(rows: list[dict], report: dict, env: dict) -> str:
+    """Render a report. Only sections with data are emitted, so `run`
+    (rows only) and `attribute` (report only) each produce a clean file."""
     lines = ["# toolprobe report", "",
              "## Environment",
-             *[f"- {k}: {v}" for k, v in env.items()], "",
-             "## Reliability", "",
-             "| model | quant | " + " | ".join(METRICS) + " |",
-             "|" + "---|" * (2 + len(METRICS))]
-    for r in rows:
-        lines.append("| " + " | ".join([r["model"], r["quant"],
-                                        *[_ci(r[m]) for m in METRICS if m in r]]) + " |")
-    lines += ["", "## Attribution", "",
-              "| leniency | quant | " + " | ".join(c.value for c in Cause) + " |",
-              "|" + "---|" * (2 + len(Cause))]
-    for leniency, leaf in report.items():
-        for quant, counter in leaf["per_quant"].items():
-            lines.append("| " + " | ".join([leniency, quant,
-                                            *[str(counter.get(c, 0)) for c in Cause]]) + " |")
+             *[f"- {k}: {v}" for k, v in env.items()]]
+    if rows:
+        lines += ["", "## Reliability", "",
+                  "| model | quant | " + " | ".join(METRICS) + " |",
+                  "|" + "---|" * (2 + len(METRICS))]
+        for r in rows:
+            lines.append("| " + " | ".join([r["model"], r["quant"],
+                                            *[_ci(r[m]) for m in METRICS if m in r]]) + " |")
+    if report:
+        lines += ["", "## Attribution", "",
+                  "| leniency | quant | " + " | ".join(c.value for c in Cause) + " |",
+                  "|" + "---|" * (2 + len(Cause))]
+        for leniency, leaf in report.items():
+            for quant, counter in leaf["per_quant"].items():
+                lines.append("| " + " | ".join([leniency, quant,
+                                                *[str(counter.get(c, 0)) for c in Cause]]) + " |")
     return "\n".join(lines) + "\n"

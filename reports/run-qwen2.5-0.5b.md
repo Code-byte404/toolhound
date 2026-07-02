@@ -13,8 +13,3 @@
 |---|---|---|---|---|---|
 | qwen2.5-0.5b | bf16 | 0.88 [0.71, 1.00] | 0.88 [0.71, 1.00] | 0.88 [0.71, 1.00] | 0.59 [0.35, 0.82] |
 | qwen2.5-0.5b | q4 | 0.59 [0.35, 0.82] | 0.59 [0.35, 0.82] | 0.59 [0.35, 0.82] | 0.47 [0.24, 0.71] |
-
-## Attribution
-
-| leniency | quant | pass | framework_template_bug | framework_parser_gap | model_format_failure | model_decision_failure |
-|---|---|---|---|---|---|---|
