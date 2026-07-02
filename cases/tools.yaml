@@ -115,3 +115,129 @@ toggle_light:
       room: {type: string}
       state: {type: string, enum: ["on", "off"]}
     required: [room, state]
+send_sms:
+  description: Send a text message
+  parameters:
+    type: object
+    properties:
+      to: {type: string}
+      body: {type: string}
+    required: [to, body]
+send_slack_message:
+  description: Post a message to a Slack channel
+  parameters:
+    type: object
+    properties:
+      channel: {type: string}
+      text: {type: string}
+    required: [channel, text]
+play_video:
+  description: Play a video
+  parameters:
+    type: object
+    properties:
+      query: {type: string}
+    required: [query]
+set_volume:
+  description: Set playback volume (0-100)
+  parameters:
+    type: object
+    properties:
+      level: {type: number}
+    required: [level]
+pause_playback:
+  description: Pause current media playback
+  parameters:
+    type: object
+    properties: {}
+    required: []
+get_news:
+  description: Get recent news headlines about a topic
+  parameters:
+    type: object
+    properties:
+      topic: {type: string}
+    required: [topic]
+find_place:
+  description: Find a nearby place of a given category
+  parameters:
+    type: object
+    properties:
+      category: {type: string}
+      near: {type: string}
+    required: [category, near]
+get_traffic:
+  description: Get current traffic conditions for a route
+  parameters:
+    type: object
+    properties:
+      origin: {type: string}
+      destination: {type: string}
+    required: [origin, destination]
+set_thermostat:
+  description: Set the thermostat temperature
+  parameters:
+    type: object
+    properties:
+      temperature: {type: number}
+      unit: {type: string, enum: [celsius, fahrenheit]}
+    required: [temperature]
+lock_door:
+  description: Lock or unlock a door
+  parameters:
+    type: object
+    properties:
+      door: {type: string}
+      state: {type: string, enum: ["lock", "unlock"]}
+    required: [door, state]
+start_vacuum:
+  description: Start the robot vacuum in a room
+  parameters:
+    type: object
+    properties:
+      room: {type: string}
+    required: [room]
+set_timer:
+  description: Start a countdown timer
+  parameters:
+    type: object
+    properties:
+      duration_minutes: {type: number}
+      label: {type: string}
+    required: [duration_minutes]
+calculate:
+  description: Evaluate an arithmetic expression
+  parameters:
+    type: object
+    properties:
+      expression: {type: string}
+    required: [expression]
+create_todo:
+  description: Add an item to the to-do list
+  parameters:
+    type: object
+    properties:
+      text: {type: string}
+    required: [text]
+add_contact:
+  description: Add a contact
+  parameters:
+    type: object
+    properties:
+      name: {type: string}
+      email: {type: string}
+    required: [name]
+get_definition:
+  description: Get the dictionary definition of a word
+  parameters:
+    type: object
+    properties:
+      word: {type: string}
+    required: [word]
+get_flight_status:
+  description: Get the status of a flight
+  parameters:
+    type: object
+    properties:
+      flight_number: {type: string}
+    required: [flight_number]
