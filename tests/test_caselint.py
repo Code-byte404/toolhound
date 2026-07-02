@@ -65,8 +65,13 @@ def test_abstention_with_argrules_flagged():
 
 
 def test_duplicate_id_flagged():
-    errs = validate([_case(id="dup")], [_case(id="dup")], TOOLS, {})
-    assert any("dup" in e for e in errs)
+    # Distinct user utterances so _check_utterance_leakage does NOT fire — this
+    # isolates the assertion to _check_ids alone (both cases share id="dup").
+    errs = validate(
+        [_case(id="dup")],
+        [_case(id="dup", turns=[{"role": "user", "content": "weather in Osaka?"}])],
+        TOOLS, {})
+    assert any(e.startswith("duplicate case id") and "dup" in e for e in errs)
 
 
 def test_slot_leakage_flagged():
