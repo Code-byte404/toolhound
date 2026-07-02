@@ -34,3 +34,15 @@ def test_every_case_tool_exists_in_palette():
 def test_toolcall_model():
     tc = ToolCall(tool="get_time", args={"timezone": "Europe/London"})
     assert tc.args["timezone"] == "Europe/London"
+
+
+def test_case_provenance_fields_optional_and_loaded():
+    from toolprobe.models import Case
+    # defaults when absent (backward-compatible with existing cases)
+    c = Case(id="x", cat="C1", tools=["get_time"],
+             turns=[{"role": "user", "content": "hi"}])
+    assert c.split is None and c.family is None
+    # populated when present
+    c2 = Case(id="y", cat="C1", tools=["get_time"], split="dev", family="c1_time",
+              turns=[{"role": "user", "content": "hi"}])
+    assert c2.split == "dev" and c2.family == "c1_time"
