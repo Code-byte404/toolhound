@@ -11,6 +11,7 @@ from ..models import ToolCall
 class MethodResult:
     tools: dict[str, dict]  # keyed by CANONICAL tool name; values may have renamed content
     canonicalize: Callable[[ToolCall | None], ToolCall | None]
+    meta: dict | None = None  # method-specific record (PA-Tool's rename maps) for the report
 
 
 class Method(Protocol):

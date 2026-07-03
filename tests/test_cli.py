@@ -41,7 +41,9 @@ def test_run_pa_tool_method(tmp_path, monkeypatch):
     data = json.loads((tmp_path / "run-qwen2.5-0.5b.json").read_text())
     q4 = data["models"]["qwen2.5-0.5b"]["quants"]["q4"]
     assert set(q4) == {"baseline", "pa_tool"}
-    assert "adaptation" in q4["pa_tool"]               # rename map recorded
+    assert "adaptation" in q4["pa_tool"]                 # rename map recorded
+    assert "name_map" in q4["pa_tool"]["adaptation"]     # tool renames
+    assert "param_maps" in q4["pa_tool"]["adaptation"]   # param renames (spec §7)
     md = (tmp_path / "run-qwen2.5-0.5b.md").read_text()
     assert "pa_tool" in md
 

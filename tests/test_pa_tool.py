@@ -95,6 +95,7 @@ def test_patool_prepare_returns_result(tmp_path):
     assert mr.tools["get_weather"]["function"]["name"] == "fetch_forecast"
     from toolprobe.models import ToolCall
     assert mr.canonicalize(ToolCall(tool="fetch_forecast", args={"city": "Tokyo"})).tool == "get_weather"
+    assert mr.meta is not None and "name_map" in mr.meta and "param_maps" in mr.meta
 
 
 def test_is_valid_name_rejects_keywords_stopwords_and_short():

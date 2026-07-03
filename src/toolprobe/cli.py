@@ -66,10 +66,10 @@ def _run_one(repo: str, cases, tools, method_name: str, cache_dir, base_seed: in
         s = score(call, case.expected, case.arg_rules, tools)   # canonical tools + gold
         out.append({"id": case.id, "raw": raw, "score": {k: bool(v) for k, v in s.items()}})
     result = {"cases": out, "repo": repo}
-    if method_name == "pa_tool":
-        # record the rename map for reproducibility (renamed function names per tool)
-        result["adaptation"] = {canon: fn["function"]["name"]
-                                for canon, fn in mr.tools.items()}
+    if method_name == "pa_tool" and mr.meta is not None:
+        # full rename map (tool + param, both inverse maps) for reproducibility/audit (spec §7)
+        result["adaptation"] = {"name_map": mr.meta["name_map"],
+                                "param_maps": mr.meta["param_maps"]}
     return result
 
 

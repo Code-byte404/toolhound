@@ -1,5 +1,6 @@
 """The ONLY module that may import mlx / mlx_lm. Isolates API drift (build guide §3.1).
-Deterministic generation: temp=0 greedy (top_p et al. irrelevant under greedy).
+Generation defaults to temp=0 greedy (deterministic eval); generate(temp>0, seed=...)
+does seeded sampling for reproducible stochastic draws (PA-Tool candidate generation).
 Verified against mlx 0.31.2 / mlx-lm 0.31.3."""
 import time
 from dataclasses import dataclass

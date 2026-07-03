@@ -1,6 +1,7 @@
 """PA-Tool (arXiv 2510.07248): adapt tool schemas to the model by renaming tool
 and parameter names to high-"peakedness" candidates the model itself generates.
-Faithful reconstruction from the paper (the public repo is a project page).
+Faithful reconstruction from the paper (public repo is a project page), with two
+documented deviations: schema-sparsity param context and the _is_valid_name safeguard.
 Pure logic here; the candidate generator is injected. No mlx."""
 import hashlib
 import json
@@ -15,6 +16,7 @@ from .base import MethodResult
 N_CANDIDATES = 32
 CAND_TEMP = 0.4
 ALPHA = 0.2
+_LOGIC_VERSION = 1  # bump when adaptation logic changes, so stale caches don't silently hit
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 # Prompt-echo words and articles/prepositions the weak candidate-generator emits as
@@ -31,8 +33,11 @@ _MIN_NAME_LEN = 3
 def _is_valid_name(name: str) -> bool:
     """A candidate is a usable tool/param name only if it is a real identifier that
     is not a Python keyword, not a prose stopword/prompt-echo, and long enough to be
-    a deliberate name. Junk fails here and the caller falls back to the canonical
-    name -- a faithful PA-Tool never renames a tool to `for`/`def`/`the`."""
+    a deliberate name. Junk fails here and the caller keeps the canonical name.
+    This filter is a reconstruction SAFEGUARD, a SECOND deviation from the paper
+    (besides the schema-sparsity param context): the paper assumes a candidate-capable
+    model and has no such filter; a weak generator emits prose whose leading token
+    would otherwise become a tool name."""
     return (bool(name) and name.isidentifier() and not keyword.iskeyword(name)
             and name not in _STOPWORDS and len(name) >= _MIN_NAME_LEN)
 
@@ -185,7 +190,8 @@ class PATool:
 
     def _key(self, repo: str, tools: dict) -> str:
         payload = json.dumps({"repo": repo, "tools": tools, "seed": self.base_seed,
-                              "n": self.n, "temp": self.temp, "alpha": self.alpha},
+                              "n": self.n, "temp": self.temp, "alpha": self.alpha,
+                              "logic_version": _LOGIC_VERSION},
                              sort_keys=True)
         return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
@@ -196,11 +202,13 @@ class PATool:
             cache_file = self.cache_dir / f"pa_tool-{self._key(repo, tools)}.json"
             if cache_file.exists():
                 a = PAToolAdaptation.from_dict(json.loads(cache_file.read_text()))
-                return MethodResult(tools=a.renamed_tools, canonicalize=make_canonicalize(a))
+                return MethodResult(tools=a.renamed_tools,
+                                    canonicalize=make_canonicalize(a), meta=a.to_dict())
         if gen is None:
             raise ValueError("PATool.prepare needs a `gen` (no cache hit)")
         a = pa_tool_adapt(tools, gen, n=self.n, temp=self.temp,
                           alpha=self.alpha, base_seed=self.base_seed)
         if cache_file is not None:
             cache_file.write_text(json.dumps(a.to_dict(), indent=2))
-        return MethodResult(tools=a.renamed_tools, canonicalize=make_canonicalize(a))
+        return MethodResult(tools=a.renamed_tools,
+                            canonicalize=make_canonicalize(a), meta=a.to_dict())
