@@ -4,6 +4,7 @@ Faithful reconstruction from the paper (the public repo is a project page).
 Pure logic here; the candidate generator is injected. No mlx."""
 import hashlib
 import json
+import keyword
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,25 @@ N_CANDIDATES = 32
 CAND_TEMP = 0.4
 ALPHA = 0.2
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+# Prompt-echo words and articles/prepositions the weak candidate-generator emits as
+# prose openers; _extract_name would otherwise pick these as "names".
+_STOPWORDS = frozenset({
+    "the", "a", "an", "and", "or", "of", "to", "in", "on", "with", "is", "are", "be",
+    "this", "that", "it", "as", "by", "for", "from", "your", "you",
+    "name", "function", "tool", "parameter", "param", "reply", "choose", "concise",
+    "short", "snake", "case", "example", "current", "value", "string", "here",
+})
+_MIN_NAME_LEN = 3
+
+
+def _is_valid_name(name: str) -> bool:
+    """A candidate is a usable tool/param name only if it is a real identifier that
+    is not a Python keyword, not a prose stopword/prompt-echo, and long enough to be
+    a deliberate name. Junk fails here and the caller falls back to the canonical
+    name -- a faithful PA-Tool never renames a tool to `for`/`def`/`the`."""
+    return (bool(name) and name.isidentifier() and not keyword.iskeyword(name)
+            and name not in _STOPWORDS and len(name) >= _MIN_NAME_LEN)
 
 
 def _extract_name(text: str) -> str | None:
@@ -80,12 +100,16 @@ class PAToolAdaptation:
 
 
 def _pick(gen, prompt, n, temp, alpha, seed) -> tuple[str | None, int]:
-    """Sample n candidates + a greedy reference, return (selected_name, seed_used)."""
-    cands = [c for c in (_extract_name(t) for t in gen(prompt, n, temp, seed)) if c]
+    """Sample n candidates + a greedy reference, keep only valid names, return
+    (selected_name, seed_used). No valid candidate -> None (caller keeps canonical)."""
+    cands = [c for c in (_extract_name(t) for t in gen(prompt, n, temp, seed))
+             if c and _is_valid_name(c)]
     seed += n
     ref_raw = gen(prompt, 1, 0.0, seed)
     seed += 1
-    ref = (_extract_name(ref_raw[0]) if ref_raw else None)
+    ref = _extract_name(ref_raw[0]) if ref_raw else None
+    if ref is not None and not _is_valid_name(ref):
+        ref = None
     if not cands:
         return None, seed
     return select_name(cands, ref or cands[0], alpha), seed

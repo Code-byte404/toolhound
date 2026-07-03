@@ -97,6 +97,40 @@ def test_patool_prepare_returns_result(tmp_path):
     assert mr.canonicalize(ToolCall(tool="fetch_forecast", args={"city": "Tokyo"})).tool == "get_weather"
 
 
+def test_is_valid_name_rejects_keywords_stopwords_and_short():
+    from toolprobe.methods.pa_tool import _is_valid_name
+    assert _is_valid_name("get_weather") is True
+    assert _is_valid_name("city") is True
+    assert _is_valid_name("url") is True            # short but not a stopword
+    assert _is_valid_name("for") is False           # python keyword
+    assert _is_valid_name("def") is False           # python keyword
+    assert _is_valid_name("the") is False           # stopword
+    assert _is_valid_name("name") is False          # prompt-echo stopword
+    assert _is_valid_name("to") is False            # len < 3
+    assert _is_valid_name("") is False
+
+
+def test_adapt_falls_back_to_canonical_when_candidates_are_junk():
+    # model emits only a keyword (tool prompt) / stopword (param prompt):
+    # no valid candidate -> PA-Tool declines to rename, keeps canonical names.
+    gen = _fake_gen({"parameter": ["the"] * 32, "weather": ["for"] * 32})
+    a = pa_tool_adapt(TOOLS, gen, base_seed=0)
+    fn = a.renamed_tools["get_weather"]["function"]
+    assert fn["name"] == "get_weather"                       # NOT renamed to "for"
+    assert set(fn["parameters"]["properties"]) == {"location"}  # NOT renamed to "the"
+    assert a.name_map["get_weather"] == "get_weather"        # identity map intact
+    assert a.param_maps["get_weather"]["location"] == "location"
+
+
+def test_adapt_still_renames_valid_candidates():
+    # regression: valid candidates must still win (guard doesn't over-filter)
+    gen = _fake_gen({"parameter": ["city"] * 32, "weather": ["fetch_forecast"] * 32})
+    a = pa_tool_adapt(TOOLS, gen, base_seed=0)
+    fn = a.renamed_tools["get_weather"]["function"]
+    assert fn["name"] == "fetch_forecast"
+    assert set(fn["parameters"]["properties"]) == {"city"}
+
+
 def test_patool_cache_hit_skips_gen(tmp_path):
     from toolprobe.methods.pa_tool import PATool
     calls = {"n": 0}
