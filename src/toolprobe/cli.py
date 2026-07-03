@@ -6,10 +6,12 @@ from pathlib import Path
 from rich.console import Console
 
 from .attribution import build_attribution
+from .backend import generate as _backend_generate
+from .methods import METHODS, get_method
 from .models import load_cases, load_tools
 from .parser import parse_framework, parse_rescue
-from .report import (METRICS, attribution_table, bootstrap_ci, env_header,
-                     reliability_table, to_markdown)
+from .report import (METRICS, attribution_table, bootstrap_ci, comparison_table,
+                     env_header, reliability_table, to_markdown)
 from .runner import run_free
 from .scorer import score
 
@@ -33,22 +35,46 @@ def _models_arg(s: str) -> list[str]:
     return names
 
 
+def _methods_arg(s: str) -> list[str]:
+    names = s.split(",")
+    unknown = [m for m in names if m not in METHODS]
+    if unknown:
+        raise SystemExit(f"unknown method(s) {unknown}; choose from {', '.join(METHODS)}")
+    return names
+
+
 def _label(models: list[str]) -> str:
     return "+".join(models)
 
 
-def _run_one(repo: str, cases, tools) -> dict:
+def _make_gen(repo: str):
+    """Real PA-Tool candidate generator (MLX-backed). Monkeypatched in tests."""
+    def gen(prompt: str, n: int, temp: float, seed: int) -> list[str]:
+        return [_backend_generate(repo, prompt, max_tokens=12, temp=temp, seed=seed + i).text
+                for i in range(n)]
+    return gen
+
+
+def _run_one(repo: str, cases, tools, method_name: str, cache_dir, base_seed: int) -> dict:
+    method = get_method(method_name, cache_dir=cache_dir, base_seed=base_seed) \
+        if method_name == "pa_tool" else get_method(method_name)
+    mr = method.prepare(repo, tools, gen=_make_gen(repo))
     out = []
     for case in cases:
-        raw = run_free(repo, case, tools).text
-        call = parse_framework(raw) or parse_rescue(raw, "lenient")
-        s = score(call, case.expected, case.arg_rules, tools)
+        raw = run_free(repo, case, mr.tools).text
+        call = mr.canonicalize(parse_framework(raw) or parse_rescue(raw, "lenient"))
+        s = score(call, case.expected, case.arg_rules, tools)   # canonical tools + gold
         out.append({"id": case.id, "raw": raw, "score": {k: bool(v) for k, v in s.items()}})
-    return {"cases": out}
+    result = {"cases": out, "repo": repo}
+    if method_name == "pa_tool":
+        # record the rename map for reproducibility (renamed function names per tool)
+        result["adaptation"] = {canon: fn["function"]["name"]
+                                for canon, fn in mr.tools.items()}
+    return result
 
 
-def _aggregate(model: str, quant: str, result: dict) -> dict:
-    row = {"model": model, "quant": quant}
+def _aggregate(model: str, quant: str, method: str, result: dict) -> dict:
+    row = {"model": model, "quant": quant, "method": method}
     for m in METRICS:
         vals = [int(c["score"].get(m, False)) for c in result["cases"] if m in c["score"]]
         row[m] = bootstrap_ci(vals) if vals else (0.0, 0.0, 0.0)
@@ -58,20 +84,25 @@ def _aggregate(model: str, quant: str, result: dict) -> dict:
 def cmd_run(args) -> int:
     cases, tools = load_cases(args.cases), load_tools(TOOLS_PATH)
     models = _models_arg(args.model)
+    methods = _methods_arg(args.method)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     env = env_header()
-    data = {"env": env, "cases_file": args.cases, "models": {}}
+    env["pa_seed"] = args.pa_seed
+    data = {"env": env, "cases_file": args.cases, "methods": methods, "models": {}}
     rows = []
     for model in models:
         data["models"][model] = {"quants": {}}
         for quant in args.quant.split(","):
             repo = MODELS[model][quant]
-            result = _run_one(repo, cases, tools)
-            result["repo"] = repo
-            data["models"][model]["quants"][quant] = result
-            rows.append(_aggregate(model, quant, result))
+            data["models"][model]["quants"][quant] = {}
+            for method in methods:
+                result = _run_one(repo, cases, tools, method, args.cache_dir, args.pa_seed)
+                data["models"][model]["quants"][quant][method] = result
+                rows.append(_aggregate(model, quant, method, result))
     console.print(reliability_table(rows))
+    if len(methods) > 1:
+        console.print(comparison_table(rows))
     label = _label(models)
     (out_dir / f"run-{label}.json").write_text(json.dumps(data, indent=2))
     (out_dir / f"run-{label}.md").write_text(to_markdown(rows, {}, env))
@@ -114,6 +145,11 @@ def main(argv=None) -> int:
     r.add_argument("--quant", default="q4")
     r.add_argument("--cases", default="cases/default.jsonl")
     r.add_argument("--out", default="reports")
+    r.add_argument("--method", default="baseline", help=f"comma-separated; {', '.join(METHODS)}")
+    r.add_argument("--pa-seed", type=int, default=0, dest="pa_seed",
+                   help="PA-Tool base seed (reproducible adaptation)")
+    r.add_argument("--cache-dir", default=".cache/pa_tool", dest="cache_dir",
+                   help="PA-Tool adaptation cache dir")
     r.set_defaults(fn=cmd_run)
     a = sub.add_parser("attribute")
     a.add_argument("--model", required=True, help=models_help)
