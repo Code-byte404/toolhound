@@ -173,6 +173,10 @@ back it up.** *(Demonstration on the exploratory `default.jsonl`; real method se
 
 ## How the attribution works
 
+For the design rationale behind the four causes, parser/scorer split, confidence
+intervals, dev/test discipline, and fair-prompt rule, see
+[`docs/methodology.md`](docs/methodology.md).
+
 ```
                        ┌─────────────────────────┐
    raw model output →  │  template_sanity check   │  tokens survived round-trip?
