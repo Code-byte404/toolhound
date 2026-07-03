@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Toolhound logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1B1F3B"/>
+      <stop offset="1" stop-color="#2A2350"/>
+    </linearGradient>
+  </defs>
+
+  <!-- badge -->
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#bg)"/>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="2"/>
+
+  <!-- ears (behind head) -->
+  <ellipse cx="80" cy="170" rx="22" ry="50" fill="#7A4A24" transform="rotate(14 80 170)"/>
+  <ellipse cx="176" cy="170" rx="22" ry="50" fill="#7A4A24" transform="rotate(-14 176 170)"/>
+
+  <!-- head -->
+  <ellipse cx="128" cy="146" rx="60" ry="56" fill="#E2A968"/>
+  <!-- cream blaze + muzzle -->
+  <ellipse cx="128" cy="152" rx="20" ry="46" fill="#F5ECD9"/>
+  <ellipse cx="128" cy="176" rx="37" ry="27" fill="#F5ECD9"/>
+
+  <!-- eyebrows -->
+  <path d="M92 124 q11 -7 21 -2" stroke="#7A4A24" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M143 118 q11 -7 21 -1" stroke="#7A4A24" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+
+  <!-- eyes -->
+  <circle cx="104" cy="139" r="8.5" fill="#26262E"/>
+  <circle cx="152" cy="139" r="8.5" fill="#26262E"/>
+  <circle cx="107" cy="136" r="2.6" fill="#ffffff"/>
+  <circle cx="155" cy="136" r="2.6" fill="#ffffff"/>
+
+  <!-- nose + mouth -->
+  <ellipse cx="128" cy="160" rx="13" ry="10" fill="#26262E"/>
+  <ellipse cx="123" cy="157" rx="4" ry="2.4" fill="#6a6a76" opacity="0.7"/>
+  <path d="M128 170 v9" stroke="#9A7238" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M128 179 q-13 9 -23 2" stroke="#9A7238" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M128 179 q13 9 23 2" stroke="#9A7238" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- fedora -->
+  <path d="M84 101 Q 90 52 128 50 Q 166 52 172 101 Z" fill="#3A3F55"/>
+  <path d="M85 93 Q128 105 171 93 L171 85 Q128 97 85 85 Z" fill="#FFC24B"/>
+  <ellipse cx="128" cy="101" rx="84" ry="17" fill="#2E3244"/>
+  <ellipse cx="128" cy="98" rx="84" ry="14" fill="#3A3F55"/>
+
+  <!-- magnifying glass -->
+  <g>
+    <rect x="205" y="200" width="13" height="42" rx="6.5" fill="#C9852A" transform="rotate(-45 211 221)"/>
+    <circle cx="188" cy="184" r="26" fill="#BFE9FF" opacity="0.22"/>
+    <!-- { } braces -->
+    <path d="M184 171 q-7 0 -7 6.5 q0 6.5 -5 6.5 q5 0 5 6.5 q0 6.5 7 6.5" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M192 171 q7 0 7 6.5 q0 6.5 5 6.5 q-5 0 -5 6.5 q0 6.5 -7 6.5" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="188" cy="184" r="26" fill="none" stroke="#FFC24B" stroke-width="8"/>
+    <path d="M172 176 q3 -8 13 -10" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>
