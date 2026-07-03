@@ -231,6 +231,10 @@ of these sound fun, open an issue and say hi:
 Every metric in this project has a confidence interval and every logic path has a test. Please keep it that way —
 `ruff check . && pytest` is the bar, and any claimed improvement must show **non-overlapping CIs vs. baseline**.
 
+**New here?** → **[CONTRIBUTING.md](CONTRIBUTING.md)** walks you from clone to merged PR (dev setup, the hard
+rules, the bar), and the [good first issues](https://github.com/Code-byte404/toolhound/labels/good%20first%20issue)
+are concrete places to start.
+
 ---
 
 ## Reproducibility, by design
