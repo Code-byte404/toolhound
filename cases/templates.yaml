@@ -1,0 +1,273 @@
+# Template set for deterministic case generation (toolprobe.casegen).
+# Each template's `count` (or `count_per_size` for C7) is per split; disjoint
+# dev/test bindings live in cases/slots.yaml. See design doc §5 for category
+# definitions and cases/tools.yaml for the 32-tool palette.
+
+# ---- C1: single obvious tool (one clearly-implicated tool, no ambiguity) ----
+- id: c1_weather
+  cat: C1
+  slot: city
+  count: 5
+  tools: [get_weather]
+  phrasings:
+    - "What's the weather in {location} right now?"
+    - "How's the weather in {location}?"
+    - "Is it raining in {location} today?"
+  expected: {tool: get_weather, args: {location: "{location}"}}
+  arg_rules: {location: {equiv_field: location_equiv}}
+
+- id: c1_time
+  cat: C1
+  slot: timezone_city
+  count: 5
+  tools: [get_time]
+  phrasings:
+    - "What's the time in {city}?"
+    - "What time is it right now in {city}?"
+  expected: {tool: get_time, args: {timezone: "{timezone}"}}
+  arg_rules: {timezone: {equiv_field: timezone_equiv}}
+
+- id: c1_search
+  cat: C1
+  slot: search_topic
+  count: 5
+  tools: [search_web]
+  phrasings:
+    - "Can you look up {query}?"
+    - "Search the web for {query}."
+  expected: {tool: search_web, args: {query: "{query}"}}
+  arg_rules: {query: {match: semantic}}
+
+- id: c1_stock
+  cat: C1
+  slot: stock_symbol
+  count: 5
+  tools: [get_stock]
+  phrasings:
+    - "What's the stock price for {symbol}?"
+    - "Get me a quote for {symbol}."
+  expected: {tool: get_stock, args: {symbol: "{symbol}"}}
+  arg_rules: {}
+
+# ---- C2: confusable-tool selection (present a cluster, gold picks exactly one) ----
+- id: c2_email_cluster
+  cat: C2
+  slot: email_msg
+  count: 5
+  tools: [send_email, send_sms, send_slack_message]
+  phrasings:
+    - "Email {to} with subject '{subject}' saying {body}."
+    - "Send an email to {to}, subject '{subject}', message: {body}"
+  expected: {tool: send_email, args: {to: "{to}", subject: "{subject}", body: "{body}"}}
+  arg_rules: {body: {match: semantic}}
+
+- id: c2_sms_cluster
+  cat: C2
+  slot: sms_msg
+  count: 5
+  tools: [send_email, send_sms, send_slack_message]
+  phrasings:
+    - "Text {to}: {body}"
+    - "Send a text message to {to} saying {body}."
+  expected: {tool: send_sms, args: {to: "{to}", body: "{body}"}}
+  arg_rules: {body: {match: semantic}}
+
+- id: c2_slack_cluster
+  cat: C2
+  slot: slack_msg
+  count: 4
+  tools: [send_email, send_sms, send_slack_message]
+  phrasings:
+    - "Post to {channel}: {text}"
+    - "Send a Slack message to {channel} saying {text}."
+  expected: {tool: send_slack_message, args: {channel: "{channel}", text: "{text}"}}
+  arg_rules: {text: {match: semantic}}
+
+- id: c2_reminder_vs_event
+  cat: C2
+  slot: reminder
+  count: 4
+  tools: [create_reminder, create_event]
+  phrasings:
+    - "Remind me to {text} {when_phrase}."
+  expected: {tool: create_reminder, args: {text: "{text}", datetime: "{when_iso}"}}
+  arg_rules:
+    text: {equiv_field: text_equiv}
+    datetime: {normalize: iso8601_minute}
+
+- id: c2_event_vs_reminder
+  cat: C2
+  slot: event_solo
+  count: 4
+  tools: [create_reminder, create_event]
+  phrasings:
+    - "Put {title} on my calendar {when_phrase}."
+    - "Schedule {title} {when_phrase}."
+  expected: {tool: create_event, args: {title: "{title}", start: "{start_iso}"}}
+  arg_rules:
+    title: {equiv_field: title_equiv}
+    start: {normalize: iso8601_minute}
+
+# ---- C3: arg-heavy (multiple required args, no distractor tools) ----
+- id: c3_currency
+  cat: C3
+  slot: currency
+  count: 8
+  tools: [convert_currency]
+  phrasings:
+    - "How much is {amount} {from} in {to}?"
+    - "Convert {amount} {from} to {to}."
+  expected: {tool: convert_currency, args: {amount: "{amount}", from: "{from}", to: "{to}"}}
+  arg_rules:
+    from: {equiv_field: from_equiv}
+    to: {equiv_field: to_equiv}
+
+- id: c3_weather_unit
+  cat: C3
+  slot: weather_unit
+  count: 7
+  tools: [get_weather]
+  phrasings:
+    - "Weather in {location} in {unit} please."
+    - "What's the temperature in {location} in {unit}?"
+  expected: {tool: get_weather, args: {location: "{location}", unit: "{unit}"}}
+  arg_rules:
+    location: {equiv_field: location_equiv}
+    unit: {equiv_field: unit_equiv}
+
+- id: c3_thermostat
+  cat: C3
+  slot: thermostat
+  count: 6
+  tools: [set_thermostat]
+  phrasings:
+    - "Set the thermostat to {temperature} degrees {unit}."
+    - "Change the temperature to {temperature} {unit}."
+  expected: {tool: set_thermostat, args: {temperature: "{temperature}", unit: "{unit}"}}
+  arg_rules: {unit: {equiv_field: unit_equiv}}
+
+- id: c3_reminder_full
+  cat: C3
+  slot: reminder
+  count: 6
+  tools: [create_reminder]
+  phrasings:
+    - "Set a reminder to {text} {when_phrase}."
+    - "Remind me to {text} {when_phrase}, please."
+  expected: {tool: create_reminder, args: {text: "{text}", datetime: "{when_iso}"}}
+  arg_rules:
+    text: {equiv_field: text_equiv}
+    datetime: {normalize: iso8601_minute}
+
+# ---- C4: nested / array args ----
+- id: c4_event_2attendees
+  cat: C4
+  slot: event_attendees
+  count: 9
+  tools: [create_event]
+  phrasings:
+    - "Schedule a {title} {when_phrase} with {attendees}."
+    - "Set up {title} {when_phrase}, invite {attendees}."
+  expected:
+    tool: create_event
+    args: {title: "{title}", start: "{start_iso}", attendees: "{attendees}"}
+  arg_rules:
+    title: {equiv_field: title_equiv}
+    start: {normalize: iso8601_minute}
+    attendees: {match: set}
+
+- id: c4_event_3attendees
+  cat: C4
+  slot: event_attendees3
+  count: 9
+  tools: [create_event]
+  phrasings:
+    - "Book a {title} {when_phrase} with {attendees}."
+    - "Set up {title} {when_phrase}, invite {attendees}."
+  expected:
+    tool: create_event
+    args: {title: "{title}", start: "{start_iso}", attendees: "{attendees}"}
+  arg_rules:
+    title: {equiv_field: title_equiv}
+    start: {normalize: iso8601_minute}
+    attendees: {match: set}
+
+# ---- C5: abstention (expected null; distractor tools present but none apply) ----
+- id: c5_chitchat_a
+  cat: C5
+  slot: chitchat_a
+  count: 9
+  tools: [get_weather, search_web, convert_currency]
+  phrasings: ["{utterance}"]
+  expected: null
+
+- id: c5_chitchat_b
+  cat: C5
+  slot: chitchat_b
+  count: 7
+  tools: [create_reminder, send_email, get_time]
+  phrasings: ["{utterance}"]
+  expected: null
+
+# ---- C6: multi-turn carryover (later turn must reuse earlier-turn context) ----
+- id: c6_currency_carry
+  cat: C6
+  slot: currency_carry
+  count: 6
+  tools: [convert_currency]
+  phrasings: ["unused"]
+  turns:
+    - {role: user, content: "Convert {amount} {from} to {to}."}
+    - {role: assistant, tool_call: {tool: convert_currency, args: {amount: "{amount}", from: "{from}", to: "{to}"}}}
+    - {role: tool, content: "{result}"}
+    - {role: user, content: "And the same amount to {to2}?"}
+  expected: {tool: convert_currency, args: {amount: "{amount}", from: "{from}", to: "{to2}"}}
+  arg_rules: {}
+
+- id: c6_calendar_carry
+  cat: C6
+  slot: calendar_carry
+  count: 6
+  tools: [read_calendar, create_event]
+  phrasings: ["unused"]
+  turns:
+    - {role: user, content: "Am I free {date_phrase}?"}
+    - {role: assistant, tool_call: {tool: read_calendar, args: {date: "{date}"}}}
+    - {role: tool, content: "[]"}
+    - {role: user, content: "Great, book a {title} then at {time_phrase}."}
+  expected: {tool: create_event, args: {title: "{title}", start: "{start_iso}"}}
+  arg_rules:
+    title: {equiv_field: title_equiv}
+    start: {normalize: iso8601_minute}
+
+# ---- C7: catalog scaling (same intent, tool count grows) ----
+- id: c7_time
+  cat: C7
+  slot: timezone_city
+  sizes: [3, 8, 16, 32]
+  count_per_size: 3
+  target_tool: get_time
+  catalog: &all_tools
+    [get_weather, convert_currency, create_reminder, send_email, search_web,
+     get_time, create_event, read_calendar, set_alarm, play_music, get_stock,
+     translate, get_directions, take_note, toggle_light, send_sms,
+     send_slack_message, play_video, set_volume, pause_playback, get_news,
+     find_place, get_traffic, set_thermostat, lock_door, start_vacuum,
+     set_timer, calculate, create_todo, add_contact, get_definition,
+     get_flight_status]
+  phrasings: ["What's the time in {city}?"]
+  expected: {tool: get_time, args: {timezone: "{timezone}"}}
+  arg_rules: {timezone: {equiv_field: timezone_equiv}}
+
+- id: c7_translate
+  cat: C7
+  slot: translate_text
+  sizes: [3, 8, 16, 32]
+  count_per_size: 4
+  target_tool: translate
+  catalog: *all_tools
+  phrasings: ["Translate '{text}' to {target_lang}."]
+  expected: {tool: translate, args: {text: "{text}", target_lang: "{target_lang}"}}
+  arg_rules:
+    text: {match: semantic}
+    target_lang: {equiv_field: target_lang_equiv}

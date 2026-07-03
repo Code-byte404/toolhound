@@ -33,6 +33,8 @@ class Case(BaseModel):
     arg_rules: dict[str, dict[str, Any]] = {}
     n_tools: int | None = None
     note: str | None = None
+    split: Literal["dev", "test"] | None = None
+    family: str | None = None
 
 
 def load_cases(path: str | Path) -> list[Case]:
