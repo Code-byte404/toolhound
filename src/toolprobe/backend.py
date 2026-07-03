@@ -33,7 +33,8 @@ def assert_same_template(bf16_repo: str, q4_repo: str) -> None:
 
 
 def generate(repo: str, prompt: str, max_tokens: int = 256,
-             grammar: str | None = None) -> GenResult:
+             grammar: str | None = None, temp: float = 0.0,
+             seed: int | None = None) -> GenResult:
     if grammar is not None:
         raise NotImplementedError("constrained decoding is a v1.1 seam (Outlines/XGrammar)")
     import mlx.core as mx
@@ -41,7 +42,9 @@ def generate(repo: str, prompt: str, max_tokens: int = 256,
     from mlx_lm.sample_utils import make_sampler
 
     model, tokenizer = load_model(repo)
-    sampler = make_sampler(temp=0.0)
+    if seed is not None:
+        mx.random.seed(seed)
+    sampler = make_sampler(temp=temp)
     t0 = time.perf_counter()
     text = mlx_generate(model, tokenizer, prompt=prompt,
                         max_tokens=max_tokens, sampler=sampler)

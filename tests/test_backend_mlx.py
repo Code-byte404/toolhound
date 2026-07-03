@@ -18,3 +18,13 @@ def test_generate_deterministic():
 def test_grammar_reserved():
     with pytest.raises(NotImplementedError):
         generate(REPO, "hi", grammar="{}")
+
+
+@pytest.mark.mlx
+def test_sampling_seed_is_reproducible():
+    _, tok = load_model(REPO)
+    prompt = tok.apply_chat_template([{"role": "user", "content": "Name a color."}],
+                                     add_generation_prompt=True, tokenize=False)
+    a = generate(REPO, prompt, max_tokens=8, temp=0.8, seed=7)
+    b = generate(REPO, prompt, max_tokens=8, temp=0.8, seed=7)
+    assert a.text == b.text                      # same seed+temp => identical
