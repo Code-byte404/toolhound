@@ -18,6 +18,11 @@
   <img src="https://img.shields.io/badge/status-v1%20%C2%B7%20pre--release-orange" alt="status">
 </p>
 
+<p align="center">
+  <img src="assets/result-card.png" width="840"
+       alt="Three small models fail tool calls for three different root causes: Qwen2.5-0.5B fails on an upstream chat-template bug (not the model's fault), while Qwen2.5-1.5B and Llama-3.2-3B fail on model judgment.">
+</p>
+
 ---
 
 ## The 60-second pitch
