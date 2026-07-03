@@ -1,0 +1,335 @@
+city:
+  dev:
+    - {location: "Tokyo", location_equiv: ["Tokyo", "Tokyo, Japan", "tokyo"]}
+    - {location: "Paris", location_equiv: ["Paris", "Paris, France"]}
+    - {location: "Seattle", location_equiv: ["Seattle", "Seattle, WA"]}
+    - {location: "Osaka", location_equiv: ["Osaka", "Osaka, Japan"]}
+    - {location: "Lisbon", location_equiv: ["Lisbon", "Lisbon, Portugal"]}
+    - {location: "Vienna", location_equiv: ["Vienna", "Vienna, Austria"]}
+  test:
+    - {location: "Berlin", location_equiv: ["Berlin", "Berlin, Germany"]}
+    - {location: "Madrid", location_equiv: ["Madrid", "Madrid, Spain"]}
+    - {location: "Toronto", location_equiv: ["Toronto", "Toronto, Canada"]}
+    - {location: "Cairo", location_equiv: ["Cairo", "Cairo, Egypt"]}
+    - {location: "Helsinki", location_equiv: ["Helsinki", "Helsinki, Finland"]}
+    - {location: "Bangkok", location_equiv: ["Bangkok", "Bangkok, Thailand"]}
+
+timezone_city:
+  dev:
+    - {city: "Sydney", timezone: "Australia/Sydney", timezone_equiv: ["Australia/Sydney", "Sydney"]}
+    - {city: "London", timezone: "Europe/London", timezone_equiv: ["Europe/London", "London", "GMT", "BST"]}
+    - {city: "Dubai", timezone: "Asia/Dubai", timezone_equiv: ["Asia/Dubai", "Dubai"]}
+    - {city: "Singapore", timezone: "Asia/Singapore", timezone_equiv: ["Asia/Singapore", "Singapore", "SGT"]}
+    - {city: "Auckland", timezone: "Pacific/Auckland", timezone_equiv: ["Pacific/Auckland", "Auckland", "NZST"]}
+    - {city: "Johannesburg", timezone: "Africa/Johannesburg", timezone_equiv: ["Africa/Johannesburg", "Johannesburg", "SAST"]}
+  test:
+    - {city: "New York", timezone: "America/New_York", timezone_equiv: ["America/New_York", "New York", "EST", "EDT"]}
+    - {city: "Mumbai", timezone: "Asia/Kolkata", timezone_equiv: ["Asia/Kolkata", "Mumbai", "IST"]}
+    - {city: "Sao Paulo", timezone: "America/Sao_Paulo", timezone_equiv: ["America/Sao_Paulo", "Sao Paulo"]}
+    - {city: "Moscow", timezone: "Europe/Moscow", timezone_equiv: ["Europe/Moscow", "Moscow", "MSK"]}
+    - {city: "Seoul", timezone: "Asia/Seoul", timezone_equiv: ["Asia/Seoul", "Seoul", "KST"]}
+    - {city: "Los Angeles", timezone: "America/Los_Angeles", timezone_equiv: ["America/Los_Angeles", "Los Angeles", "PST", "PDT"]}
+
+search_topic:
+  dev:
+    - {query: "the latest SpaceX launch date", query_equiv: ["latest SpaceX launch date", "SpaceX's next launch date"]}
+    - {query: "who won the last World Cup", query_equiv: ["who won the last World Cup", "last World Cup winner"]}
+    - {query: "reviews for the new iPhone", query_equiv: ["reviews for the new iPhone", "new iPhone reviews"]}
+    - {query: "best hiking trails near Denver", query_equiv: ["best hiking trails near Denver", "hiking trails near Denver"]}
+    - {query: "current price of gold", query_equiv: ["current price of gold", "gold price today"]}
+    - {query: "how to fix a leaky faucet", query_equiv: ["how to fix a leaky faucet", "fixing a leaky faucet"]}
+  test:
+    - {query: "the release date of the next Marvel movie", query_equiv: ["release date of the next Marvel movie", "next Marvel movie release date"]}
+    - {query: "who invented the telephone", query_equiv: ["who invented the telephone", "inventor of the telephone"]}
+    - {query: "best budget laptops 2026", query_equiv: ["best budget laptops 2026", "top budget laptops 2026"]}
+    - {query: "population of Iceland", query_equiv: ["population of Iceland", "how many people live in Iceland"]}
+    - {query: "recipe for banana bread", query_equiv: ["recipe for banana bread", "banana bread recipe"]}
+    - {query: "top-rated sushi restaurants in Kyoto", query_equiv: ["top-rated sushi restaurants in Kyoto", "best sushi in Kyoto"]}
+
+stock_symbol:
+  dev:
+    - {symbol: "AAPL"}
+    - {symbol: "MSFT"}
+    - {symbol: "TSLA"}
+    - {symbol: "NVDA"}
+    - {symbol: "AMZN"}
+    - {symbol: "GOOGL"}
+  test:
+    - {symbol: "META"}
+    - {symbol: "NFLX"}
+    - {symbol: "INTC"}
+    - {symbol: "AMD"}
+    - {symbol: "IBM"}
+    - {symbol: "ORCL"}
+
+email_msg:
+  dev:
+    - {to: "alex@corp.com", subject: "Lunch?", body: "let's meet at noon"}
+    - {to: "priya@corp.com", subject: "Report", body: "the report is attached, please review"}
+    - {to: "sam@corp.com", subject: "Meeting moved", body: "our 3pm meeting moved to 4pm"}
+    - {to: "dana@corp.com", subject: "Thanks", body: "thanks for your help yesterday"}
+    - {to: "leo@corp.com", subject: "Budget", body: "can you send the updated budget numbers"}
+    - {to: "mia@corp.com", subject: "Welcome", body: "welcome to the team, excited to work with you"}
+  test:
+    - {to: "kim@corp.com", subject: "Invoice", body: "please find the invoice attached"}
+    - {to: "noah@corp.com", subject: "Feedback", body: "here is my feedback on the draft"}
+    - {to: "ivy@corp.com", subject: "Reschedule", body: "can we reschedule to next week"}
+    - {to: "omar@corp.com", subject: "Congrats", body: "congrats on the launch, great work"}
+    - {to: "zoe@corp.com", subject: "Reminder", body: "reminder that the deadline is Friday"}
+    - {to: "finn@corp.com", subject: "Update", body: "quick update on the project status"}
+
+sms_msg:
+  dev:
+    - {to: "mom", body: "running 10 minutes late"}
+    - {to: "jake", body: "pick up milk on your way home"}
+    - {to: "coach", body: "I can't make practice today"}
+    - {to: "555-0142", body: "the package arrived, thanks"}
+    - {to: "grandma", body: "happy birthday, love you"}
+    - {to: "landlord", body: "the sink is leaking again"}
+  test:
+    - {to: "dad", body: "leaving the office now"}
+    - {to: "roommate", body: "can you grab dinner tonight"}
+    - {to: "dentist", body: "need to reschedule my appointment"}
+    - {to: "555-0198", body: "your order has shipped"}
+    - {to: "uncle joe", body: "see you at the reunion"}
+    - {to: "plumber", body: "the heater stopped working"}
+
+slack_msg:
+  dev:
+    - {channel: "#general", text: "standup in 5 minutes"}
+    - {channel: "#eng", text: "deploy is done, please verify"}
+    - {channel: "#random", text: "anyone up for lunch"}
+    - {channel: "#alerts", text: "latency spike on checkout service"}
+    - {channel: "#design", text: "new mockups are ready for review"}
+    - {channel: "#support", text: "customer ticket volume is up today"}
+  test:
+    - {channel: "#marketing", text: "campaign launches tomorrow morning"}
+    - {channel: "#ops", text: "server maintenance window starts tonight"}
+    - {channel: "#hiring", text: "new candidate scheduled for Friday"}
+    - {channel: "#product", text: "roadmap review moved to Thursday"}
+    - {channel: "#finance", text: "expense reports due end of month"}
+    - {channel: "#legal", text: "contract needs signature by Monday"}
+
+reminder:
+  dev:
+    - {text: "call mom", text_equiv: ["call mom", "Call mom"], when_phrase: "tomorrow at 6pm", when_iso: "2026-03-21T18:00:00"}
+    - {text: "pay the electricity bill", text_equiv: ["pay the electricity bill", "Pay electricity bill"], when_phrase: "Monday at 9am", when_iso: "2026-03-23T09:00:00"}
+    - {text: "pick up dry cleaning", text_equiv: ["pick up dry cleaning", "Pick up the dry cleaning"], when_phrase: "tomorrow at noon", when_iso: "2026-03-21T12:00:00"}
+    - {text: "renew the car insurance", text_equiv: ["renew the car insurance", "Renew car insurance"], when_phrase: "Tuesday at 8am", when_iso: "2026-03-24T08:00:00"}
+    - {text: "take the vitamins", text_equiv: ["take the vitamins", "Take vitamins"], when_phrase: "tomorrow at 7am", when_iso: "2026-03-21T07:00:00"}
+    - {text: "submit the timesheet", text_equiv: ["submit the timesheet", "Submit timesheet"], when_phrase: "Friday at 5pm", when_iso: "2026-03-20T17:00:00"}
+    - {text: "water the plants", text_equiv: ["water the plants", "Water the plants"], when_phrase: "Wednesday at 8am", when_iso: "2026-03-25T08:00:00"}
+  test:
+    - {text: "call the dentist", text_equiv: ["call the dentist", "Call dentist"], when_phrase: "tomorrow at 8am", when_iso: "2026-03-21T08:00:00"}
+    - {text: "pay the internet bill", text_equiv: ["pay the internet bill", "Pay internet bill"], when_phrase: "Monday at 10am", when_iso: "2026-03-23T10:00:00"}
+    - {text: "pick up the kids", text_equiv: ["pick up the kids", "Pick up kids"], when_phrase: "tomorrow at 3pm", when_iso: "2026-03-21T15:00:00"}
+    - {text: "renew the passport", text_equiv: ["renew the passport", "Renew passport"], when_phrase: "Tuesday at 9am", when_iso: "2026-03-24T09:00:00"}
+    - {text: "feed the cat", text_equiv: ["feed the cat", "Feed cat"], when_phrase: "tomorrow at 6am", when_iso: "2026-03-21T06:00:00"}
+    - {text: "submit the expense report", text_equiv: ["submit the expense report", "Submit expense report"], when_phrase: "Friday at 4pm", when_iso: "2026-03-20T16:00:00"}
+    - {text: "water the garden", text_equiv: ["water the garden", "Water garden"], when_phrase: "Wednesday at 7am", when_iso: "2026-03-25T07:00:00"}
+
+event_solo:
+  dev:
+    - {title: "budget review", title_equiv: ["budget review", "Budget Review"], when_phrase: "tomorrow at 10am", start_iso: "2026-03-21T10:00:00"}
+    - {title: "dentist appointment", title_equiv: ["dentist appointment", "Dentist Appointment"], when_phrase: "Monday at 2pm", start_iso: "2026-03-23T14:00:00"}
+    - {title: "one-on-one with my manager", title_equiv: ["one-on-one with my manager", "1:1 with manager"], when_phrase: "Tuesday at 11am", start_iso: "2026-03-24T11:00:00"}
+    - {title: "car maintenance", title_equiv: ["car maintenance", "Car Maintenance"], when_phrase: "Wednesday at 9am", start_iso: "2026-03-25T09:00:00"}
+  test:
+    - {title: "product demo", title_equiv: ["product demo", "Product Demo"], when_phrase: "tomorrow at 1pm", start_iso: "2026-03-21T13:00:00"}
+    - {title: "eye exam", title_equiv: ["eye exam", "Eye Exam"], when_phrase: "Monday at 3pm", start_iso: "2026-03-23T15:00:00"}
+    - {title: "performance review", title_equiv: ["performance review", "Performance Review"], when_phrase: "Tuesday at 10am", start_iso: "2026-03-24T10:00:00"}
+    - {title: "grooming appointment", title_equiv: ["grooming appointment", "Grooming Appointment"], when_phrase: "Wednesday at 8am", start_iso: "2026-03-25T08:00:00"}
+
+currency:
+  dev:
+    - {amount: 250, from: "USD", to: "EUR", from_equiv: ["USD", "US dollars", "dollar"], to_equiv: ["EUR", "euros", "euro"]}
+    - {amount: 1000, from: "JPY", to: "GBP", from_equiv: ["JPY", "yen"], to_equiv: ["GBP", "pounds", "pound"]}
+    - {amount: 60, from: "EUR", to: "USD", from_equiv: ["EUR", "euros", "euro"], to_equiv: ["USD", "US dollars", "dollar"]}
+    - {amount: 300, from: "GBP", to: "JPY", from_equiv: ["GBP", "pounds", "pound"], to_equiv: ["JPY", "yen"]}
+    - {amount: 4500, from: "MXN", to: "USD", from_equiv: ["MXN", "Mexican pesos", "pesos"], to_equiv: ["USD", "US dollars", "dollar"]}
+    - {amount: 80, from: "SGD", to: "EUR", from_equiv: ["SGD", "Singapore dollars"], to_equiv: ["EUR", "euros", "euro"]}
+    - {amount: 15000, from: "INR", to: "USD", from_equiv: ["INR", "rupees", "Indian rupees"], to_equiv: ["USD", "US dollars", "dollar"]}
+    - {amount: 120, from: "USD", to: "KRW", from_equiv: ["USD", "US dollars", "dollar"], to_equiv: ["KRW", "won", "South Korean won"]}
+    - {amount: 90, from: "EUR", to: "GBP", from_equiv: ["EUR", "euros", "euro"], to_equiv: ["GBP", "pounds", "pound"]}
+  test:
+    - {amount: 500, from: "CAD", to: "CHF", from_equiv: ["CAD", "Canadian dollars"], to_equiv: ["CHF", "francs", "Swiss francs"]}
+    - {amount: 75, from: "AUD", to: "NZD", from_equiv: ["AUD", "Australian dollars"], to_equiv: ["NZD", "New Zealand dollars"]}
+    - {amount: 200, from: "CHF", to: "CAD", from_equiv: ["CHF", "francs", "Swiss francs"], to_equiv: ["CAD", "Canadian dollars"]}
+    - {amount: 350, from: "NZD", to: "AUD", from_equiv: ["NZD", "New Zealand dollars"], to_equiv: ["AUD", "Australian dollars"]}
+    - {amount: 6000, from: "ZAR", to: "USD", from_equiv: ["ZAR", "South African rand", "rand"], to_equiv: ["USD", "US dollars", "dollar"]}
+    - {amount: 40, from: "BRL", to: "EUR", from_equiv: ["BRL", "Brazilian real", "real"], to_equiv: ["EUR", "euros", "euro"]}
+    - {amount: 12000, from: "THB", to: "USD", from_equiv: ["THB", "Thai baht", "baht"], to_equiv: ["USD", "US dollars", "dollar"]}
+    - {amount: 150, from: "USD", to: "MXN", from_equiv: ["USD", "US dollars", "dollar"], to_equiv: ["MXN", "Mexican pesos", "pesos"]}
+    - {amount: 70, from: "GBP", to: "CHF", from_equiv: ["GBP", "pounds", "pound"], to_equiv: ["CHF", "francs", "Swiss francs"]}
+
+weather_unit:
+  dev:
+    - {location: "Denver", location_equiv: ["Denver", "Denver, CO"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {location: "Rome", location_equiv: ["Rome", "Rome, Italy"], unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {location: "Miami", location_equiv: ["Miami", "Miami, FL"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {location: "Oslo", location_equiv: ["Oslo", "Oslo, Norway"], unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {location: "Phoenix", location_equiv: ["Phoenix", "Phoenix, AZ"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {location: "Amsterdam", location_equiv: ["Amsterdam", "Amsterdam, Netherlands"], unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {location: "Dallas", location_equiv: ["Dallas", "Dallas, TX"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+  test:
+    - {location: "Chicago", location_equiv: ["Chicago", "Chicago, IL"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {location: "Barcelona", location_equiv: ["Barcelona", "Barcelona, Spain"], unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {location: "Atlanta", location_equiv: ["Atlanta", "Atlanta, GA"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {location: "Stockholm", location_equiv: ["Stockholm", "Stockholm, Sweden"], unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {location: "Houston", location_equiv: ["Houston", "Houston, TX"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {location: "Brussels", location_equiv: ["Brussels", "Brussels, Belgium"], unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {location: "Portland", location_equiv: ["Portland", "Portland, OR"], unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+
+thermostat:
+  dev:
+    - {temperature: 68, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {temperature: 21, unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {temperature: 72, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {temperature: 19, unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {temperature: 65, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {temperature: 23, unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {temperature: 70, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+  test:
+    - {temperature: 66, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {temperature: 20, unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {temperature: 74, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {temperature: 18, unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {temperature: 69, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+    - {temperature: 22, unit: "celsius", unit_equiv: ["celsius", "Celsius", "C"]}
+    - {temperature: 71, unit: "fahrenheit", unit_equiv: ["fahrenheit", "Fahrenheit", "F"]}
+
+event_attendees:
+  dev:
+    - {title: "design review", title_equiv: ["design review", "Design Review"], when_phrase: "Friday 2pm", start_iso: "2026-03-20T14:00:00", attendees: ["sam@corp.com", "lee@corp.com"]}
+    - {title: "sprint planning", title_equiv: ["sprint planning", "Sprint Planning"], when_phrase: "Monday 10am", start_iso: "2026-03-23T10:00:00", attendees: ["dev1@corp.com", "dev2@corp.com"]}
+    - {title: "vendor call", title_equiv: ["vendor call", "Vendor Call"], when_phrase: "Tuesday 1pm", start_iso: "2026-03-24T13:00:00", attendees: ["vendor@partner.com", "pm@corp.com"]}
+    - {title: "onboarding session", title_equiv: ["onboarding session", "Onboarding Session"], when_phrase: "Wednesday 9am", start_iso: "2026-03-25T09:00:00", attendees: ["hr@corp.com", "new.hire@corp.com"]}
+    - {title: "retro", title_equiv: ["retro", "Retrospective"], when_phrase: "Thursday 4pm", start_iso: "2026-03-26T16:00:00", attendees: ["ana@corp.com", "bo@corp.com"]}
+    - {title: "budget sync", title_equiv: ["budget sync", "Budget Sync"], when_phrase: "Friday 11am", start_iso: "2026-03-20T11:00:00", attendees: ["fin1@corp.com", "fin2@corp.com"]}
+    - {title: "client kickoff", title_equiv: ["client kickoff", "Client Kickoff"], when_phrase: "next Monday 2pm", start_iso: "2026-03-23T14:00:00", attendees: ["client@partner.com", "lead@corp.com"]}
+    - {title: "code review", title_equiv: ["code review", "Code Review"], when_phrase: "Tuesday 3pm", start_iso: "2026-03-24T15:00:00", attendees: ["eng1@corp.com", "eng2@corp.com"]}
+    - {title: "town hall prep", title_equiv: ["town hall prep", "Town Hall Prep"], when_phrase: "Wednesday 1pm", start_iso: "2026-03-25T13:00:00", attendees: ["comms@corp.com", "ceo@corp.com"]}
+  test:
+    - {title: "roadmap review", title_equiv: ["roadmap review", "Roadmap Review"], when_phrase: "Monday 11am", start_iso: "2026-03-23T11:00:00", attendees: ["road1@corp.com", "road2@corp.com"]}
+    - {title: "hiring debrief", title_equiv: ["hiring debrief", "Hiring Debrief"], when_phrase: "Tuesday 9am", start_iso: "2026-03-24T09:00:00", attendees: ["hr2@corp.com", "mgr@corp.com"]}
+    - {title: "architecture review", title_equiv: ["architecture review", "Architecture Review"], when_phrase: "Wednesday 2pm", start_iso: "2026-03-25T14:00:00", attendees: ["arch1@corp.com", "arch2@corp.com"]}
+    - {title: "partner sync", title_equiv: ["partner sync", "Partner Sync"], when_phrase: "Thursday 10am", start_iso: "2026-03-26T10:00:00", attendees: ["partner1@ext.com", "biz@corp.com"]}
+    - {title: "security review", title_equiv: ["security review", "Security Review"], when_phrase: "Friday 3pm", start_iso: "2026-03-20T15:00:00", attendees: ["sec1@corp.com", "sec2@corp.com"]}
+    - {title: "marketing sync", title_equiv: ["marketing sync", "Marketing Sync"], when_phrase: "next Monday 9am", start_iso: "2026-03-23T09:00:00", attendees: ["mkt1@corp.com", "mkt2@corp.com"]}
+    - {title: "quarterly planning", title_equiv: ["quarterly planning", "Quarterly Planning"], when_phrase: "Tuesday 1pm", start_iso: "2026-03-24T13:00:00", attendees: ["lead1@corp.com", "lead2@corp.com"]}
+    - {title: "support triage", title_equiv: ["support triage", "Support Triage"], when_phrase: "Wednesday 10am", start_iso: "2026-03-25T10:00:00", attendees: ["sup1@corp.com", "sup2@corp.com"]}
+    - {title: "product review", title_equiv: ["product review", "Product Review"], when_phrase: "Thursday 2pm", start_iso: "2026-03-26T14:00:00", attendees: ["prod1@corp.com", "prod2@corp.com"]}
+
+event_attendees3:
+  dev:
+    - {title: "standup", title_equiv: ["standup", "Standup"], when_phrase: "next Monday 9am", start_iso: "2026-03-23T09:00:00", end_iso: "2026-03-23T09:30:00", attendees: ["ana@corp.com", "bo@corp.com", "cy@corp.com"]}
+    - {title: "all-hands", title_equiv: ["all-hands", "All Hands"], when_phrase: "Tuesday 3pm", start_iso: "2026-03-24T15:00:00", end_iso: "2026-03-24T16:00:00", attendees: ["e1@corp.com", "e2@corp.com", "e3@corp.com"]}
+    - {title: "release planning", title_equiv: ["release planning", "Release Planning"], when_phrase: "Wednesday 11am", start_iso: "2026-03-25T11:00:00", end_iso: "2026-03-25T12:00:00", attendees: ["r1@corp.com", "r2@corp.com", "r3@corp.com"]}
+    - {title: "offsite planning", title_equiv: ["offsite planning", "Offsite Planning"], when_phrase: "Thursday 1pm", start_iso: "2026-03-26T13:00:00", end_iso: "2026-03-26T14:00:00", attendees: ["p1@corp.com", "p2@corp.com", "p3@corp.com"]}
+    - {title: "interview panel", title_equiv: ["interview panel", "Interview Panel"], when_phrase: "Friday 10am", start_iso: "2026-03-20T10:00:00", end_iso: "2026-03-20T11:00:00", attendees: ["i1@corp.com", "i2@corp.com", "i3@corp.com"]}
+    - {title: "design crit", title_equiv: ["design crit", "Design Crit"], when_phrase: "next Monday 2pm", start_iso: "2026-03-23T14:00:00", end_iso: "2026-03-23T15:00:00", attendees: ["d1@corp.com", "d2@corp.com", "d3@corp.com"]}
+    - {title: "leadership sync", title_equiv: ["leadership sync", "Leadership Sync"], when_phrase: "Tuesday 4pm", start_iso: "2026-03-24T16:00:00", end_iso: "2026-03-24T17:00:00", attendees: ["l1@corp.com", "l2@corp.com", "l3@corp.com"]}
+    - {title: "training session", title_equiv: ["training session", "Training Session"], when_phrase: "Wednesday 3pm", start_iso: "2026-03-25T15:00:00", end_iso: "2026-03-25T16:00:00", attendees: ["t1@corp.com", "t2@corp.com", "t3@corp.com"]}
+    - {title: "vendor review", title_equiv: ["vendor review", "Vendor Review"], when_phrase: "Thursday 9am", start_iso: "2026-03-26T09:00:00", end_iso: "2026-03-26T10:00:00", attendees: ["v1@corp.com", "v2@corp.com", "v3@corp.com"]}
+  test:
+    - {title: "kickoff", title_equiv: ["kickoff", "Kickoff"], when_phrase: "next Monday 10am", start_iso: "2026-03-23T10:00:00", end_iso: "2026-03-23T10:30:00", attendees: ["x1@corp.com", "x2@corp.com", "x3@corp.com"]}
+    - {title: "board prep", title_equiv: ["board prep", "Board Prep"], when_phrase: "Tuesday 2pm", start_iso: "2026-03-24T14:00:00", end_iso: "2026-03-24T15:00:00", attendees: ["y1@corp.com", "y2@corp.com", "y3@corp.com"]}
+    - {title: "hackathon planning", title_equiv: ["hackathon planning", "Hackathon Planning"], when_phrase: "Wednesday 1pm", start_iso: "2026-03-25T13:00:00", end_iso: "2026-03-25T14:00:00", attendees: ["z1@corp.com", "z2@corp.com", "z3@corp.com"]}
+    - {title: "budget planning", title_equiv: ["budget planning", "Budget Planning"], when_phrase: "Thursday 11am", start_iso: "2026-03-26T11:00:00", end_iso: "2026-03-26T12:00:00", attendees: ["w1@corp.com", "w2@corp.com", "w3@corp.com"]}
+    - {title: "candidate debrief", title_equiv: ["candidate debrief", "Candidate Debrief"], when_phrase: "Friday 2pm", start_iso: "2026-03-20T14:00:00", end_iso: "2026-03-20T15:00:00", attendees: ["q1@corp.com", "q2@corp.com", "q3@corp.com"]}
+    - {title: "strategy session", title_equiv: ["strategy session", "Strategy Session"], when_phrase: "next Monday 3pm", start_iso: "2026-03-23T15:00:00", end_iso: "2026-03-23T16:00:00", attendees: ["s1@corp.com", "s2@corp.com", "s3@corp.com"]}
+    - {title: "eng leads sync", title_equiv: ["eng leads sync", "Eng Leads Sync"], when_phrase: "Tuesday 9am", start_iso: "2026-03-24T09:00:00", end_iso: "2026-03-24T10:00:00", attendees: ["u1@corp.com", "u2@corp.com", "u3@corp.com"]}
+    - {title: "customer QBR", title_equiv: ["customer QBR", "Customer QBR"], when_phrase: "Wednesday 4pm", start_iso: "2026-03-25T16:00:00", end_iso: "2026-03-25T17:00:00", attendees: ["c1@corp.com", "c2@corp.com", "c3@corp.com"]}
+    - {title: "finance review", title_equiv: ["finance review", "Finance Review"], when_phrase: "Thursday 3pm", start_iso: "2026-03-26T15:00:00", end_iso: "2026-03-26T16:00:00", attendees: ["f1@corp.com", "f2@corp.com", "f3@corp.com"]}
+
+chitchat_a:
+  dev:
+    - {utterance: "Thanks, that's really helpful!"}
+    - {utterance: "Why do you think the sky is blue?"}
+    - {utterance: "What's 15% of 80?"}
+    - {utterance: "You're doing a great job, thank you."}
+    - {utterance: "Ha, that's a funny way to put it."}
+    - {utterance: "What's your favorite color?"}
+    - {utterance: "Can you tell me a joke?"}
+    - {utterance: "That makes a lot of sense now, thanks."}
+    - {utterance: "How are you doing today?"}
+    - {utterance: "I appreciate you explaining that so clearly."}
+  test:
+    - {utterance: "You rock, thanks for the help!"}
+    - {utterance: "Why is grass green?"}
+    - {utterance: "What's 20% of 150?"}
+    - {utterance: "Awesome, this is exactly what I needed."}
+    - {utterance: "Haha, good one."}
+    - {utterance: "What's your favorite season?"}
+    - {utterance: "Got any good riddles?"}
+    - {utterance: "Okay that clears it up, appreciate it."}
+    - {utterance: "How's it going with you?"}
+    - {utterance: "Thanks for taking the time to walk me through it."}
+
+chitchat_b:
+  dev:
+    - {utterance: "I'm feeling a bit stressed about work lately."}
+    - {utterance: "What's the meaning of life, do you think?"}
+    - {utterance: "I had a rough day today."}
+    - {utterance: "Do you ever get tired of answering questions?"}
+    - {utterance: "That's a beautiful sunset in this photo."}
+    - {utterance: "I'm nervous about my interview tomorrow."}
+    - {utterance: "Just wanted to say hi."}
+    - {utterance: "This conversation has been really nice."}
+  test:
+    - {utterance: "Honestly today has been exhausting."}
+    - {utterance: "What do you think happiness really means?"}
+    - {utterance: "I had a pretty tough week."}
+    - {utterance: "Do you ever wish you could take a break?"}
+    - {utterance: "What a gorgeous view in this picture."}
+    - {utterance: "I'm anxious about my exam tomorrow."}
+    - {utterance: "Just wanted to check in and say hello."}
+    - {utterance: "I've really enjoyed chatting with you."}
+
+currency_carry:
+  dev:
+    - {amount: 100, from: "USD", to: "EUR", to2: "GBP", result: "92.0"}
+    - {amount: 250, from: "CAD", to: "USD", to2: "MXN", result: "182.5"}
+    - {amount: 500, from: "GBP", to: "JPY", to2: "EUR", result: "94500.0"}
+    - {amount: 80, from: "EUR", to: "CHF", to2: "USD", result: "76.4"}
+    - {amount: 1000, from: "SGD", to: "AUD", to2: "NZD", result: "1120.0"}
+    - {amount: 300, from: "AUD", to: "USD", to2: "CAD", result: "198.0"}
+  test:
+    - {amount: 200, from: "CAD", to: "CHF", to2: "EUR", result: "148.0"}
+    - {amount: 150, from: "AUD", to: "NZD", to2: "SGD", result: "162.0"}
+    - {amount: 600, from: "JPY", to: "USD", to2: "EUR", result: "4.02"}
+    - {amount: 90, from: "CHF", to: "GBP", to2: "USD", result: "79.2"}
+    - {amount: 700, from: "NZD", to: "AUD", to2: "USD", result: "630.0"}
+    - {amount: 400, from: "USD", to: "AUD", to2: "CAD", result: "608.0"}
+
+calendar_carry:
+  dev:
+    - {date: "2026-03-26", date_phrase: "Thursday afternoon", title: "dentist appointment", title_equiv: ["dentist appointment", "dentist"], start_iso: "2026-03-26T15:00:00", time_phrase: "3pm"}
+    - {date: "2026-03-23", date_phrase: "Monday morning", title: "team lunch", title_equiv: ["team lunch", "lunch with the team"], start_iso: "2026-03-23T12:00:00", time_phrase: "noon"}
+    - {date: "2026-03-24", date_phrase: "Tuesday afternoon", title: "vet visit", title_equiv: ["vet visit", "the vet"], start_iso: "2026-03-24T14:00:00", time_phrase: "2pm"}
+    - {date: "2026-03-25", date_phrase: "Wednesday evening", title: "haircut", title_equiv: ["haircut", "hair appointment"], start_iso: "2026-03-25T18:00:00", time_phrase: "6pm"}
+    - {date: "2026-03-20", date_phrase: "Friday morning", title: "car service", title_equiv: ["car service", "car maintenance"], start_iso: "2026-03-20T09:00:00", time_phrase: "9am"}
+    - {date: "2026-03-23", date_phrase: "next Monday afternoon", title: "physio session", title_equiv: ["physio session", "physiotherapy"], start_iso: "2026-03-23T15:00:00", time_phrase: "3pm"}
+  test:
+    - {date: "2026-03-24", date_phrase: "Tuesday morning", title: "doctor visit", title_equiv: ["doctor visit", "doctor"], start_iso: "2026-03-24T09:00:00", time_phrase: "9am"}
+    - {date: "2026-03-26", date_phrase: "Thursday morning", title: "client call", title_equiv: ["client call", "call with the client"], start_iso: "2026-03-26T10:00:00", time_phrase: "10am"}
+    - {date: "2026-03-25", date_phrase: "Wednesday afternoon", title: "eye exam", title_equiv: ["eye exam", "the eye doctor"], start_iso: "2026-03-25T14:00:00", time_phrase: "2pm"}
+    - {date: "2026-03-23", date_phrase: "Monday evening", title: "gym session", title_equiv: ["gym session", "the gym"], start_iso: "2026-03-23T18:00:00", time_phrase: "6pm"}
+    - {date: "2026-03-20", date_phrase: "Friday afternoon", title: "massage", title_equiv: ["massage", "massage appointment"], start_iso: "2026-03-20T15:00:00", time_phrase: "3pm"}
+    - {date: "2026-03-23", date_phrase: "next Monday morning", title: "orientation", title_equiv: ["orientation", "new hire orientation"], start_iso: "2026-03-23T09:00:00", time_phrase: "9am"}
+
+translate_text:
+  dev:
+    - {text: "good morning", target_lang: "French", target_lang_equiv: ["French", "fr", "france"]}
+    - {text: "thank you very much", target_lang: "Spanish", target_lang_equiv: ["Spanish", "es", "spain"]}
+    - {text: "where is the train station", target_lang: "German", target_lang_equiv: ["German", "de", "germany"]}
+    - {text: "how much does this cost", target_lang: "Japanese", target_lang_equiv: ["Japanese", "ja", "japan"]}
+    - {text: "nice to meet you", target_lang: "Italian", target_lang_equiv: ["Italian", "it", "italy"]}
+    - {text: "see you tomorrow", target_lang: "Portuguese", target_lang_equiv: ["Portuguese", "pt", "portugal"]}
+  test:
+    - {text: "good evening", target_lang: "Korean", target_lang_equiv: ["Korean", "ko", "korea"]}
+    - {text: "excuse me", target_lang: "Mandarin", target_lang_equiv: ["Mandarin", "Chinese", "zh"]}
+    - {text: "happy birthday", target_lang: "Dutch", target_lang_equiv: ["Dutch", "nl", "netherlands"]}
+    - {text: "where is the bathroom", target_lang: "Russian", target_lang_equiv: ["Russian", "ru", "russia"]}
+    - {text: "I love this city", target_lang: "Greek", target_lang_equiv: ["Greek", "el", "greece"]}
+    - {text: "welcome home", target_lang: "Swedish", target_lang_equiv: ["Swedish", "sv", "sweden"]}

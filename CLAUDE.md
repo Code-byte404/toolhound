@@ -51,6 +51,24 @@ Core principle: **parser is lenient ("宽进"), scorer is strict ("严判")** �
 - Anything touching a real model is `@pytest.mark.mlx` (excluded by default via pytest.ini).
 - TDD: failing test first, minimal fix, rerun. Attribution branches especially must stay locked by tests.
 
+## Case set (v2)
+
+Canonical files in `cases/`:
+- `dev.jsonl` (152 cases) — **tune here**. Select and iterate on fixes (grammar, prompt tweaks, PA-Tool/TSCG variants) against this split.
+- `test.jsonl` (152 cases) — **report here**, held out. Only run a fix against test once, after it's been picked on dev, to report its gain.
+- `default.jsonl` (304 cases) — the dev+test union. Exploratory/baseline runs only (e.g. the 3-model v1 table below) — **never** used for method selection or as the basis of a reported improvement, since it mixes dev and test.
+- `smoke.jsonl` — small fixed set for pipeline smoke checks (not part of the dev/test discipline).
+
+**Dev/test discipline:** dev and test are generated from disjoint slot pools (see `cases/slots.yaml`), so a case in dev and its counterpart in test share a template/family but never the exact same entity values. This means a fix that overfits to specific dev slot values (rather than the underlying failure mode) won't transfer to test — generalization to unseen slots is the bar. Standard protocol: tune/select on `dev.jsonl`, report the resulting delta on `test.jsonl` with bootstrap CIs; a claimed improvement needs non-overlapping CIs on test, not just on dev.
+
+Regenerate + validate:
+```bash
+python scripts/gen_cases.py        # templates.yaml + slots.yaml (+ handwritten/) -> dev/test/default.jsonl
+python scripts/validate_cases.py   # schema, arg-rules, leakage, distribution checks
+pytest tests/test_cases_valid.py   # same checks, enforced in plain CI
+```
+`toolprobe.casegen` (generation) and `toolprobe.caselint` (validation) are pure Python — no `mlx` import, run anywhere. Generated case files are **committed artifacts**: don't hand-edit `dev.jsonl`/`test.jsonl`/`default.jsonl` directly — edit `cases/templates.yaml`/`cases/slots.yaml`/`cases/handwritten/` and regenerate.
+
 ## Known Findings
 
 **Model/template quirks the harness surfaced (don't "fix" the first as if it were ours):**
