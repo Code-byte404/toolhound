@@ -2,6 +2,8 @@
 from .base import Baseline, Method, MethodResult
 from .pa_tool import PATool
 
+__all__ = ["Baseline", "Method", "MethodResult", "PATool", "get_method", "METHODS"]
+
 METHODS = ("baseline", "pa_tool")
 
 
