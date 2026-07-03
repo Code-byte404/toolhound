@@ -4,3 +4,9 @@ __pycache__/
 reports/*.json
 .DS_Store
 .cache/
+
+# Claude Code / local agent tooling — kept locally, not part of the public project
+CLAUDE.md
+.claude/
+.superpowers/
+.mcp.json
