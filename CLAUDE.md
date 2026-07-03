@@ -69,6 +69,21 @@ pytest tests/test_cases_valid.py   # same checks, enforced in plain CI
 ```
 `toolprobe.casegen` (generation) and `toolprobe.caselint` (validation) are pure Python — no `mlx` import, run anywhere. Generated case files are **committed artifacts**: don't hand-edit `dev.jsonl`/`test.jsonl`/`default.jsonl` directly — edit `cases/templates.yaml`/`cases/slots.yaml`/`cases/handwritten/` and regenerate.
 
+## Methods (v2)
+
+`toolprobe run --method baseline,pa_tool` — `--method` is comma-separated like `--model`; each requested method emits its own row per (model, quant), plus a `## Method comparison` table when more than one is given.
+
+- `baseline` — fair-prompt identity: the tool catalog is presented unchanged, `canonicalize` is a no-op. This is the v1 behavior.
+- `pa_tool` — PA-Tool (arXiv 2510.07248; faithful reconstruction here — the public repo is a project page, not code, so re-verify against the paper before changing `methods/pa_tool.py`). Renames each tool and parameter name to the highest-"peakedness" candidate the model itself generates: N=32 candidates at temp=0.4, peakedness = count of candidates within edit-distance τ=α·max_len (α=0.2, paper's Eq. 2), ties broken by edit distance to a greedy (temp=0) reference name. Descriptions are preserved verbatim — only names change. This is prior art being *measured*, not invented here; don't claim novelty for it.
+
+**The Method seam:** `src/toolprobe/methods/` is pure (no `mlx` import, enforced by `tests/test_hygiene.py`) and only transforms how the tool catalog is *presented* — `Method.prepare(repo, tools, *, gen) -> MethodResult(tools, canonicalize)`. `templates.render` renders the RENAMED tools (`mr.tools`), so generation only ever sees the adapted schema. `scorer.py` stays frozen: it always judges the call after `mr.canonicalize(call)` maps renamed tool/param names back to the canonical ones, against canonical gold (`case.expected`) and the canonical tool catalog. Adapt-then-canonicalize is what keeps scoring valid under renaming — a method that touched the scorer instead would be cheating the harness, not fixing the model.
+
+**Reproducibility:** PA-Tool's candidate sampling is stochastic but seeded — `--pa-seed` (default 0) sets `PATool.base_seed`, and each tool/param pick advances the seed deterministically, so the same seed always reproduces the same rename map. Adaptations are cached under `.cache/pa_tool/` (gitignored, regenerable), keyed on `(repo, tools, seed, n, temp, alpha)`; a cache hit skips the model entirely. The seed lands in the run's `env` header (`pa_seed`) and the rename map lands per (model, quant) under `adaptation` in the JSON report — both required for reproducing or auditing a reported PA-Tool number.
+
+**Comparison table `credible`:** a (model, quant, method, metric) row is flagged `credible` in `report.comparison_rows` iff the method's bootstrap CI is disjoint from baseline's **and** its point estimate is higher — the design doc's operational bar for a real improvement, not just a directional delta. `cases/dev.jsonl` is the demonstration set for this table; reporting a PA-Tool gain on held-out `cases/test.jsonl` is deferred to sub-project #3 — the dev/test discipline above still applies, never select a method on test.
+
+**Reserved seams stay reserved:** `backend.generate(grammar=...)` still raises `NotImplementedError` — PA-Tool is a presentation-layer fix, not constrained decoding. TSCG integration is a future spec, not implemented here.
+
 ## Known Findings
 
 **Model/template quirks the harness surfaced (don't "fix" the first as if it were ours):**
