@@ -86,3 +86,30 @@ def test_adaptation_roundtrips_through_dict():
     b = PAToolAdaptation.from_dict(a.to_dict())
     assert b.name_map == a.name_map and b.param_maps == a.param_maps
     assert b.renamed_tools == a.renamed_tools
+
+
+def test_patool_prepare_returns_result(tmp_path):
+    from toolprobe.methods.pa_tool import PATool
+    gen = _fake_gen({"parameter": ["city"] * 32, "weather": ["fetch_forecast"] * 32})
+    mr = PATool(cache_dir=tmp_path, base_seed=0).prepare("repo-x", TOOLS, gen=gen)
+    assert mr.tools["get_weather"]["function"]["name"] == "fetch_forecast"
+    from toolprobe.models import ToolCall
+    assert mr.canonicalize(ToolCall(tool="fetch_forecast", args={"city": "Tokyo"})).tool == "get_weather"
+
+
+def test_patool_cache_hit_skips_gen(tmp_path):
+    from toolprobe.methods.pa_tool import PATool
+    calls = {"n": 0}
+    def counting_gen(prompt, n, temp, seed):
+        calls["n"] += 1
+        return ["fetch_forecast"] * (n if n > 1 else 1)
+    pt = PATool(cache_dir=tmp_path, base_seed=0)
+    pt.prepare("repo-x", TOOLS, gen=counting_gen)
+    first = calls["n"]
+    assert first > 0
+    # second prepare with the same (repo, tools, seed) must hit cache: gen not called again
+    def exploding_gen(*a, **k):
+        raise AssertionError("gen should not be called on cache hit")
+    mr = pt.prepare("repo-x", TOOLS, gen=exploding_gen)
+    assert calls["n"] == first
+    assert mr.tools["get_weather"]["function"]["name"] == "fetch_forecast"

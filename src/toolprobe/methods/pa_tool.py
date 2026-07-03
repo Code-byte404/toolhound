@@ -2,10 +2,14 @@
 and parameter names to high-"peakedness" candidates the model itself generates.
 Faithful reconstruction from the paper (the public repo is a project page).
 Pure logic here; the candidate generator is injected. No mlx."""
+import hashlib
+import json
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 from ..models import ToolCall
+from .base import MethodResult
 
 N_CANDIDATES = 32
 CAND_TEMP = 0.4
@@ -145,8 +149,34 @@ def make_canonicalize(a: PAToolAdaptation):
     return canonicalize
 
 
-class PATool:  # fully implemented in Task 4
+class PATool:
+    """PA-Tool method (arXiv 2510.07248). Stochastic adaptation is seeded and
+    cached; a cache hit reproduces a prior run without model access."""
     name = "pa_tool"
 
-    def prepare(self, repo, tools, *, gen=None):
-        raise NotImplementedError("PATool.prepare implemented in Task 4")
+    def __init__(self, cache_dir=None, n: int = N_CANDIDATES, temp: float = CAND_TEMP,
+                 alpha: float = ALPHA, base_seed: int = 0):
+        self.cache_dir = Path(cache_dir) if cache_dir else None
+        self.n, self.temp, self.alpha, self.base_seed = n, temp, alpha, base_seed
+
+    def _key(self, repo: str, tools: dict) -> str:
+        payload = json.dumps({"repo": repo, "tools": tools, "seed": self.base_seed,
+                              "n": self.n, "temp": self.temp, "alpha": self.alpha},
+                             sort_keys=True)
+        return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+    def prepare(self, repo: str, tools: dict[str, dict], *, gen=None) -> MethodResult:
+        cache_file = None
+        if self.cache_dir is not None:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            cache_file = self.cache_dir / f"pa_tool-{self._key(repo, tools)}.json"
+            if cache_file.exists():
+                a = PAToolAdaptation.from_dict(json.loads(cache_file.read_text()))
+                return MethodResult(tools=a.renamed_tools, canonicalize=make_canonicalize(a))
+        if gen is None:
+            raise ValueError("PATool.prepare needs a `gen` (no cache hit)")
+        a = pa_tool_adapt(tools, gen, n=self.n, temp=self.temp,
+                          alpha=self.alpha, base_seed=self.base_seed)
+        if cache_file is not None:
+            cache_file.write_text(json.dumps(a.to_dict(), indent=2))
+        return MethodResult(tools=a.renamed_tools, canonicalize=make_canonicalize(a))
