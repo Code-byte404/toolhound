@@ -13,6 +13,7 @@ def test_baseline_is_identity():
     call = ToolCall(tool="get_weather", args={"location": "Tokyo"})
     assert mr.canonicalize(call) is call           # identity
     assert mr.canonicalize(None) is None
+    assert mr.meta is None    # baseline carries no adaptation metadata
 
 
 def test_registry():
