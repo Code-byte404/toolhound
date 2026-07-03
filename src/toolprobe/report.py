@@ -47,10 +47,50 @@ METRICS = ("parse_ok", "schema_valid", "tool_correct", "args_correct")
 
 def reliability_table(rows: list[dict]) -> Table:
     t = Table(title="Tool-calling reliability (point [95% bootstrap CI])")
-    for col in ("model", "quant", *METRICS):
+    for col in ("model", "quant", "method", *METRICS):
         t.add_column(col)
     for r in rows:
-        t.add_row(r["model"], r["quant"], *[_ci(r[m]) for m in METRICS if m in r])
+        t.add_row(r["model"], r["quant"], r.get("method", "baseline"),
+                  *[_ci(r[m]) for m in METRICS if m in r])
+    return t
+
+
+def ci_overlap(a: tuple, b: tuple) -> bool:
+    _, alo, ahi = a
+    _, blo, bhi = b
+    return not (ahi < blo or bhi < alo)
+
+
+def comparison_rows(rows: list[dict]) -> list[dict]:
+    by_key: dict[tuple, dict[str, dict]] = {}
+    for r in rows:
+        by_key.setdefault((r["model"], r["quant"]), {})[r.get("method", "baseline")] = r
+    out: list[dict] = []
+    for (model, quant), by_method in by_key.items():
+        base = by_method.get("baseline")
+        if base is None:
+            continue
+        for method, r in by_method.items():
+            if method == "baseline":
+                continue
+            for m in METRICS:
+                if m in r and m in base:
+                    bp, mp = base[m], r[m]
+                    out.append({"model": model, "quant": quant, "method": method,
+                                "metric": m, "baseline": bp[0], "method_point": mp[0],
+                                "delta": mp[0] - bp[0],
+                                "credible": (not ci_overlap(bp, mp)) and mp[0] > bp[0]})
+    return out
+
+
+def comparison_table(rows: list[dict]) -> Table:
+    t = Table(title="Method vs baseline (delta; credible = CIs disjoint & higher)")
+    for col in ("model", "quant", "method", "metric", "baseline", "method_val", "delta", "credible"):
+        t.add_column(col)
+    for c in comparison_rows(rows):
+        t.add_row(c["model"], c["quant"], c["method"], c["metric"],
+                  f"{c['baseline']:.2f}", f"{c['method_point']:.2f}",
+                  f"{c['delta']:+.2f}", "yes" if c["credible"] else "no")
     return t
 
 
@@ -74,11 +114,21 @@ def to_markdown(rows: list[dict], report: dict, env: dict) -> str:
              *[f"- {k}: {v}" for k, v in env.items()]]
     if rows:
         lines += ["", "## Reliability", "",
-                  "| model | quant | " + " | ".join(METRICS) + " |",
-                  "|" + "---|" * (2 + len(METRICS))]
+                  "| model | quant | method | " + " | ".join(METRICS) + " |",
+                  "|" + "---|" * (3 + len(METRICS))]
         for r in rows:
-            lines.append("| " + " | ".join([r["model"], r["quant"],
+            lines.append("| " + " | ".join([r["model"], r["quant"], r.get("method", "baseline"),
                                             *[_ci(r[m]) for m in METRICS if m in r]]) + " |")
+        comp = comparison_rows(rows)
+        if comp:
+            lines += ["", "## Method comparison", "",
+                      "| model | quant | method | metric | baseline | method_val | delta | credible |",
+                      "|---|---|---|---|---|---|---|---|"]
+            for c in comp:
+                lines.append("| " + " | ".join([
+                    c["model"], c["quant"], c["method"], c["metric"],
+                    f"{c['baseline']:.2f}", f"{c['method_point']:.2f}",
+                    f"{c['delta']:+.2f}", "yes" if c["credible"] else "no"]) + " |")
     if report:
         lines += ["", "## Attribution", "",
                   "| leniency | quant | " + " | ".join(c.value for c in Cause) + " |",
