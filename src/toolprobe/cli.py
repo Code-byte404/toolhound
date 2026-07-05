@@ -11,9 +11,11 @@ from .methods import METHODS, get_method
 from .models import load_cases, load_tools
 from .parser import parse_framework, parse_rescue
 from .report import (METRICS, attribution_table, bootstrap_ci, comparison_table,
-                     env_header, reliability_table, to_markdown)
-from .runner import run_free
+                     decode_comparison_table, env_header, reliability_table, to_markdown)
+from .runner import run_constrained, run_free
 from .scorer import score
+
+DECODES = ("free", "constrained")
 
 MODELS = {
     "qwen2.5-0.5b": {"bf16": "mlx-community/Qwen2.5-0.5B-Instruct-bf16",
@@ -43,6 +45,14 @@ def _methods_arg(s: str) -> list[str]:
     return names
 
 
+def _decodes_arg(s: str) -> list[str]:
+    names = s.split(",")
+    unknown = [d for d in names if d not in DECODES]
+    if unknown:
+        raise SystemExit(f"unknown decode(s) {unknown}; choose from {', '.join(DECODES)}")
+    return names
+
+
 def _label(models: list[str]) -> str:
     return "+".join(models)
 
@@ -55,13 +65,17 @@ def _make_gen(repo: str):
     return gen
 
 
-def _run_one(repo: str, cases, tools, method_name: str, cache_dir, base_seed: int) -> dict:
+def _run_one(repo: str, cases, tools, method_name: str, decode: str,
+             cache_dir, base_seed: int) -> dict:
     method = get_method(method_name, cache_dir=cache_dir, base_seed=base_seed) \
         if method_name == "pa_tool" else get_method(method_name)
     mr = method.prepare(repo, tools, gen=_make_gen(repo))
+    # constrained decoding masks the JSON body to the PRESENTED (mr.tools) schema;
+    # scoring still canonicalizes back, so method + constrained compose correctly.
+    run = run_constrained if decode == "constrained" else run_free
     out = []
     for case in cases:
-        raw = run_free(repo, case, mr.tools).text
+        raw = run(repo, case, mr.tools).text
         call = mr.canonicalize(parse_framework(raw) or parse_rescue(raw, "lenient"))
         s = score(call, case.expected, case.arg_rules, tools)   # canonical tools + gold
         out.append({"id": case.id, "raw": raw, "score": {k: bool(v) for k, v in s.items()}})
@@ -73,8 +87,8 @@ def _run_one(repo: str, cases, tools, method_name: str, cache_dir, base_seed: in
     return result
 
 
-def _aggregate(model: str, quant: str, method: str, result: dict) -> dict:
-    row = {"model": model, "quant": quant, "method": method}
+def _aggregate(model: str, quant: str, method: str, decode: str, result: dict) -> dict:
+    row = {"model": model, "quant": quant, "method": method, "decode": decode}
     for m in METRICS:
         vals = [int(c["score"].get(m, False)) for c in result["cases"] if m in c["score"]]
         row[m] = bootstrap_ci(vals) if vals else (0.0, 0.0, 0.0)
@@ -85,24 +99,36 @@ def cmd_run(args) -> int:
     cases, tools = load_cases(args.cases), load_tools(TOOLS_PATH)
     models = _models_arg(args.model)
     methods = _methods_arg(args.method)
+    decodes = _decodes_arg(args.decode)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     env = env_header()
     env["pa_seed"] = args.pa_seed
-    data = {"env": env, "cases_file": args.cases, "methods": methods, "models": {}}
+    data = {"env": env, "cases_file": args.cases, "methods": methods,
+            "decodes": decodes, "models": {}}
     rows = []
     for model in models:
         data["models"][model] = {"quants": {}}
         for quant in args.quant.split(","):
             repo = MODELS[model][quant]
-            data["models"][model]["quants"][quant] = {}
+            per_method: dict = {}
+            data["models"][model]["quants"][quant] = per_method
             for method in methods:
-                result = _run_one(repo, cases, tools, method, args.cache_dir, args.pa_seed)
-                data["models"][model]["quants"][quant][method] = result
-                rows.append(_aggregate(model, quant, method, result))
+                for decode in decodes:
+                    result = _run_one(repo, cases, tools, method, decode,
+                                      args.cache_dir, args.pa_seed)
+                    # backward-compatible: single decode keeps quants[q][method] = result;
+                    # only nest by decode when more than one is requested.
+                    if len(decodes) == 1:
+                        per_method[method] = result
+                    else:
+                        per_method.setdefault(method, {})[decode] = result
+                    rows.append(_aggregate(model, quant, method, decode, result))
     console.print(reliability_table(rows))
     if len(methods) > 1:
         console.print(comparison_table(rows))
+    if len(decodes) > 1:
+        console.print(decode_comparison_table(rows))
     label = _label(models)
     (out_dir / f"run-{label}.json").write_text(json.dumps(data, indent=2))
     (out_dir / f"run-{label}.md").write_text(to_markdown(rows, {}, env))
@@ -146,6 +172,8 @@ def main(argv=None) -> int:
     r.add_argument("--cases", default="cases/default.jsonl")
     r.add_argument("--out", default="reports")
     r.add_argument("--method", default="baseline", help=f"comma-separated; {', '.join(METHODS)}")
+    r.add_argument("--decode", default="free",
+                   help=f"comma-separated; {', '.join(DECODES)}")
     r.add_argument("--pa-seed", type=int, default=0, dest="pa_seed",
                    help="PA-Tool base seed (reproducible adaptation)")
     r.add_argument("--cache-dir", default=".cache/pa_tool", dest="cache_dir",

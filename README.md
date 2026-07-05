@@ -13,9 +13,9 @@
 <p align="center">
   <a href="#quickstart"><img src="https://img.shields.io/badge/Apple%20Silicon-MLX%20native-000000?logo=apple&logoColor=white" alt="MLX native"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/tests-101%20passing-2ea44f" alt="tests">
+  <img src="https://img.shields.io/badge/tests-113%20passing-2ea44f" alt="tests">
   <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license">
-  <img src="https://img.shields.io/badge/status-v1%20%C2%B7%20pre--release-orange" alt="status">
+  <img src="https://img.shields.io/badge/status-v2%20%C2%B7%20pre--release-orange" alt="status">
 </p>
 
 <p align="center">
@@ -72,8 +72,10 @@ Toolhound is a **measuring stick**, not another schema-adaptation method. Its va
 - ✅ It **separates** "the model can't format" from "the model can't decide" — because grammar-constrained
   decoding fixes the first and can *never* fix the second.
 - ✅ It **quantifies** quantization damage (bf16 vs. q4) *without* confounding it with template differences.
-- ✅ In v2, it **benchmarks existing zero-training fixes** (e.g. [PA-Tool](#roadmap)) on a held-out test set —
-  never claiming an improvement unless its confidence interval is disjoint from baseline.
+- ✅ In v2, it **benchmarks existing zero-training fixes** ([PA-Tool](#roadmap), grammar-constrained decoding)
+  on a held-out test set — never claiming an improvement unless its confidence interval is disjoint from baseline.
+  The measuring stick already earned its keep: it caught that PA-Tool *hurts* small models, and confirmed that
+  constrained decoding credibly helps — but **only where the failure is syntactic** (see below).
 
 We are **not** the first to notice that chat templates break tool tokens, and we don't claim to be. Toolhound's
 contribution is making that failure *legible, attributable, and reproducible* on consumer Apple hardware.
@@ -111,6 +113,9 @@ toolprobe attribute --model qwen2.5-1.5b
 
 # 3) Compare a zero-training fix against baseline (v2)
 toolprobe run --model qwen2.5-1.5b --cases cases/test.jsonl --method baseline,pa_tool
+
+# 4) Free vs. grammar-constrained decoding — adds a "Decode comparison" table (v2)
+toolprobe run --model qwen2.5-0.5b --cases cases/dev.jsonl --decode free,constrained
 ```
 
 Both commands write matching `*.json` (machine-readable) and `*.md` (human-readable) reports into `reports/`,
@@ -169,6 +174,29 @@ That's the entire point of a measuring stick: **it tells you when a fix *doesn't
 back it up.** *(Demonstration on the exploratory `default.jsonl`; real method selection uses the held-out
 `dev` / `test` split so a gain has to generalize to unseen slots.)*
 
+### And when a fix *does* work — grammar-constrained decoding (v2)
+
+Toolhound now runs a second axis, `--decode free,constrained`, that masks generation to each model's own
+tool-call grammar via [`outlines-core`](https://github.com/dottxt-ai/outlines-core) — trigger-gated, so a model
+can still decline to call a tool (abstention survives). Selected on the `dev` split, then reported **once** on
+held-out `test.jsonl`, it becomes the first integrated fix to clear the credible bar — on **2 of 3** models:
+
+```
+Constrained vs free decoding — held-out test.jsonl (q4) · Apple M2 Pro
+──────────────────────────────────────────────────────────────────────────
+model          metric          free → constrained    credible
+qwen2.5-0.5b   parse/schema    0.50 → 0.76  (+0.27)    yes    ← format-bound: grammar rescues it
+qwen2.5-0.5b   args_correct    0.31 → 0.52  (+0.21)    yes
+llama-3.2-3b   schema_valid    0.68 → 1.00  (+0.32)    yes    ← emits invalid arg types; grammar forbids them
+qwen2.5-1.5b   (every metric)  no credible change      no     ← already well-formed; its errors are judgment
+```
+
+The **null result on the 1.5B is the whole point.** Constrained decoding fixes the *syntax* layer (is it a
+parseable, schema-valid call?) and can **never** fix the *decision* layer (is it the right tool with the right
+values?). So it credibly helps the two models whose failures are syntactic, and does nothing for the model that
+already emits clean calls and just picks wrong. Toolhound is what lets you tell those two situations apart — and
+it even surfaces the honest cost (constrained decoding can degenerate into repetition on unbounded string fields).
+
 ---
 
 ## How the attribution works
@@ -199,18 +227,21 @@ case → templates → runner → parser → scorer → attribution → report
 ```
 
 Only **one** module (`backend.py`) is allowed to import `mlx` / `mlx_lm`; a hygiene test enforces it. That
-keeps the parser, scorer, and attribution logic 100% pure and unit-testable on *any* machine (no Mac required
-for the logic tier — 101 tests run in <1s in CI).
+keeps the parser, scorer, attribution, and grammar-builder logic 100% pure and unit-testable on *any* machine
+(no Mac required for the logic tier — 113 tests run in <1s in CI; the constrained-decoding e2e tests are the
+Mac-only tier).
 
 ---
 
 ## Roadmap
 
-- [x] **v1** — diagnostic harness + four-cause attribution + bootstrap CIs (this release)
+- [x] **v1** — diagnostic harness + four-cause attribution + bootstrap CIs
 - [x] **v2 (in progress)** — 304-case dev/test dataset with slot-disjoint splits; `PA-Tool` method integration
-- [ ] **v1.1 seam** — grammar-constrained decoding (Outlines / XGrammar) — the abstention-safe grammar hook is
-  already reserved in `backend.py`
-- [ ] **More methods** — TSCG, constrained decoding benchmarks (integrate & measure existing work — *not* invent new)
+- [x] **Grammar-constrained decoding** — abstention-safe, trigger-gated `--decode free,constrained` via
+  `outlines-core` (torch-free); first fix to clear the credible bar on held-out `test.jsonl` (2 of 3 models)
+- [ ] **More methods** — TSCG (integrate & measure existing work — *not* invent new)
+- [ ] **A constrained-decoding string guard** — bounded-length / repetition-penalized string fields, to remove the
+  degeneration cost the harness surfaced on unbounded string args
 - [ ] **More models** — expand the registry beyond Qwen / Llama
 - [ ] **PNG report export** for dropping straight into issues and blog posts
 
@@ -223,7 +254,8 @@ of these sound fun, open an issue and say hi:
 
 - **🧩 Add a model** to the registry and file the template/parser bugs Toolhound finds upstream.
 - **🧪 Add test cases** — especially tricky abstention traps (utterances that *look* like tool requests but aren't).
-- **🔬 Implement the constrained-decoding seam** (`backend.generate(grammar=...)` is stubbed and waiting).
+- **🔬 Harden constrained decoding** — bound string-field length / add a repetition penalty so unbounded string
+  args (e.g. `translate.target_lang`) can't degenerate into a repetition loop under the grammar.
 - **📊 Add a method** — wire an existing zero-training tool-calling fix into the `methods/` framework and let the
   benchmark judge it fairly.
 - **📖 Docs** — help port the methodology notes to English.

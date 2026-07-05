@@ -34,7 +34,8 @@ def env_header() -> dict:
     except OSError:
         chip = platform.machine()
     return {"chip": chip, "macos": platform.mac_ver()[0],
-            "mlx": v("mlx"), "mlx_lm": v("mlx-lm"), "toolprobe": v("mlx-toolprobe")}
+            "mlx": v("mlx"), "mlx_lm": v("mlx-lm"),
+            "outlines_core": v("outlines-core"), "toolprobe": v("mlx-toolprobe")}
 
 
 def _ci(cell: tuple[float, float, float]) -> str:
@@ -47,10 +48,10 @@ METRICS = ("parse_ok", "schema_valid", "tool_correct", "args_correct")
 
 def reliability_table(rows: list[dict]) -> Table:
     t = Table(title="Tool-calling reliability (point [95% bootstrap CI])")
-    for col in ("model", "quant", "method", *METRICS):
+    for col in ("model", "quant", "method", "decode", *METRICS):
         t.add_column(col)
     for r in rows:
-        t.add_row(r["model"], r["quant"], r.get("method", "baseline"),
+        t.add_row(r["model"], r["quant"], r.get("method", "baseline"), r.get("decode", "free"),
                   *[_ci(r[m]) for m in METRICS if m in r])
     return t
 
@@ -62,11 +63,14 @@ def ci_overlap(a: tuple, b: tuple) -> bool:
 
 
 def comparison_rows(rows: list[dict]) -> list[dict]:
+    """Method vs baseline, compared WITHIN the same (model, quant, decode) so a
+    method's delta isn't confounded by the decode mode."""
     by_key: dict[tuple, dict[str, dict]] = {}
     for r in rows:
-        by_key.setdefault((r["model"], r["quant"]), {})[r.get("method", "baseline")] = r
+        key = (r["model"], r["quant"], r.get("decode", "free"))
+        by_key.setdefault(key, {})[r.get("method", "baseline")] = r
     out: list[dict] = []
-    for (model, quant), by_method in by_key.items():
+    for (model, quant, decode), by_method in by_key.items():
         base = by_method.get("baseline")
         if base is None:
             continue
@@ -76,8 +80,9 @@ def comparison_rows(rows: list[dict]) -> list[dict]:
             for m in METRICS:
                 if m in r and m in base:
                     bp, mp = base[m], r[m]
-                    out.append({"model": model, "quant": quant, "method": method,
-                                "metric": m, "baseline": bp[0], "method_point": mp[0],
+                    out.append({"model": model, "quant": quant, "decode": decode,
+                                "method": method, "metric": m,
+                                "baseline": bp[0], "method_point": mp[0],
                                 "delta": mp[0] - bp[0],
                                 "credible": (not ci_overlap(bp, mp)) and mp[0] > bp[0]})
     return out
@@ -90,6 +95,44 @@ def comparison_table(rows: list[dict]) -> Table:
     for c in comparison_rows(rows):
         t.add_row(c["model"], c["quant"], c["method"], c["metric"],
                   f"{c['baseline']:.2f}", f"{c['method_point']:.2f}",
+                  f"{c['delta']:+.2f}", "yes" if c["credible"] else "no")
+    return t
+
+
+def decode_comparison_rows(rows: list[dict]) -> list[dict]:
+    """Constrained vs free, compared WITHIN the same (model, quant, method). free
+    is the reference. This is the constrained-decoding deliverable: expect
+    parse_ok/schema_valid to jump (syntax layer) while the decision metrics move little."""
+    by_key: dict[tuple, dict[str, dict]] = {}
+    for r in rows:
+        key = (r["model"], r["quant"], r.get("method", "baseline"))
+        by_key.setdefault(key, {})[r.get("decode", "free")] = r
+    out: list[dict] = []
+    for (model, quant, method), by_decode in by_key.items():
+        base = by_decode.get("free")
+        if base is None:
+            continue
+        for decode, r in by_decode.items():
+            if decode == "free":
+                continue
+            for m in METRICS:
+                if m in r and m in base:
+                    bp, mp = base[m], r[m]
+                    out.append({"model": model, "quant": quant, "method": method,
+                                "decode": decode, "metric": m,
+                                "free": bp[0], "decode_point": mp[0],
+                                "delta": mp[0] - bp[0],
+                                "credible": (not ci_overlap(bp, mp)) and mp[0] > bp[0]})
+    return out
+
+
+def decode_comparison_table(rows: list[dict]) -> Table:
+    t = Table(title="Constrained vs free (delta; credible = CIs disjoint & higher)")
+    for col in ("model", "quant", "method", "metric", "free", "constrained", "delta", "credible"):
+        t.add_column(col)
+    for c in decode_comparison_rows(rows):
+        t.add_row(c["model"], c["quant"], c["method"], c["metric"],
+                  f"{c['free']:.2f}", f"{c['decode_point']:.2f}",
                   f"{c['delta']:+.2f}", "yes" if c["credible"] else "no")
     return t
 
@@ -114,11 +157,12 @@ def to_markdown(rows: list[dict], report: dict, env: dict) -> str:
              *[f"- {k}: {v}" for k, v in env.items()]]
     if rows:
         lines += ["", "## Reliability", "",
-                  "| model | quant | method | " + " | ".join(METRICS) + " |",
-                  "|" + "---|" * (3 + len(METRICS))]
+                  "| model | quant | method | decode | " + " | ".join(METRICS) + " |",
+                  "|" + "---|" * (4 + len(METRICS))]
         for r in rows:
-            lines.append("| " + " | ".join([r["model"], r["quant"], r.get("method", "baseline"),
-                                            *[_ci(r[m]) for m in METRICS if m in r]]) + " |")
+            lines.append("| " + " | ".join(
+                [r["model"], r["quant"], r.get("method", "baseline"), r.get("decode", "free"),
+                 *[_ci(r[m]) for m in METRICS if m in r]]) + " |")
         comp = comparison_rows(rows)
         if comp:
             lines += ["", "## Method comparison", "",
@@ -128,6 +172,16 @@ def to_markdown(rows: list[dict], report: dict, env: dict) -> str:
                 lines.append("| " + " | ".join([
                     c["model"], c["quant"], c["method"], c["metric"],
                     f"{c['baseline']:.2f}", f"{c['method_point']:.2f}",
+                    f"{c['delta']:+.2f}", "yes" if c["credible"] else "no"]) + " |")
+        dcomp = decode_comparison_rows(rows)
+        if dcomp:
+            lines += ["", "## Decode comparison (constrained vs free)", "",
+                      "| model | quant | method | metric | free | constrained | delta | credible |",
+                      "|---|---|---|---|---|---|---|---|"]
+            for c in dcomp:
+                lines.append("| " + " | ".join([
+                    c["model"], c["quant"], c["method"], c["metric"],
+                    f"{c['free']:.2f}", f"{c['decode_point']:.2f}",
                     f"{c['delta']:+.2f}", "yes" if c["credible"] else "no"]) + " |")
     if report:
         lines += ["", "## Attribution", "",

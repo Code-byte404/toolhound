@@ -48,6 +48,36 @@ def test_run_pa_tool_method(tmp_path, monkeypatch):
     assert "pa_tool" in md
 
 
+def _fake_constrained(repo, case, tools, **kw):
+    # a well-formed, schema-valid call (as constrained decoding would guarantee)
+    return GenResult('<tool_call>{"name": "get_weather", "arguments": '
+                     '{"location": "Tokyo"}}</tool_call>', 0.1, 50.0, 100.0)
+
+
+def test_run_decode_axis_nests_and_compares(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "run_free", _fake_run)
+    monkeypatch.setattr(cli, "run_constrained", _fake_constrained)
+    rc = cli.main(["run", "--model", "qwen2.5-0.5b", "--quant", "q4",
+                   "--decode", "free,constrained", "--cases", "cases/smoke.jsonl",
+                   "--out", str(tmp_path)])
+    assert rc == 0
+    data = json.loads((tmp_path / "run-qwen2.5-0.5b.json").read_text())
+    assert data["decodes"] == ["free", "constrained"]
+    q4 = data["models"]["qwen2.5-0.5b"]["quants"]["q4"]
+    # >1 decode => nested by decode under the method
+    assert set(q4["baseline"]) == {"free", "constrained"}
+    assert len(q4["baseline"]["constrained"]["cases"]) == 3
+    md = (tmp_path / "run-qwen2.5-0.5b.md").read_text()
+    assert "Decode comparison" in md
+
+
+def test_unknown_decode_rejected(tmp_path, monkeypatch):
+    monkeypatch.setattr(cli, "run_free", _fake_run)
+    with pytest.raises(SystemExit):
+        cli.main(["run", "--model", "qwen2.5-0.5b", "--decode", "bogus",
+                  "--cases", "cases/smoke.jsonl", "--out", str(tmp_path)])
+
+
 def test_unknown_method_rejected(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "run_free", _fake_run)
     with pytest.raises(SystemExit):

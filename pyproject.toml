@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "mlx",
     "mlx-lm",
+    "outlines-core",  # constrained decoding (grammar -> logits mask); torch-free
     "pydantic>=2",
     "rich",
     "numpy",
