@@ -52,16 +52,30 @@ class GrammarSpec:
             for tc in self.tools]}
 
 
+# repo-substring -> wire-family key. The JSON `<tool_call>{...}` grammar is Qwen2.x-
+# specific: Qwen3.5+ switched to XML `<function=..>` (a different format this grammar
+# does NOT describe), so match "qwen2", never a bare "qwen".
+_REPO_FAMILY_PATTERNS = [("qwen2", "qwen"), ("llama", "llama")]
+
+
 def detect_family(repo: str) -> str:
-    """Map an HF repo id to a wire family. Substring match over the registered
-    families; raises on anything unrecognized rather than guessing a format."""
+    """Map an HF repo id to a constrained-decoding wire family. Explicit-pattern match
+    (not a loose family-key substring) so newer models with the same brand but a
+    different format aren't mis-mapped; raises rather than guessing a format.
+
+    Constrained decoding is validated on the JSON tool-call families (Qwen2.x, Llama-3.x).
+    The current registry is free-decoding only: Qwen3.5 emits XML and its syntax layer is
+    already saturated (no headroom), Granite's multi-turn misses are template-caused (fixed
+    in templates.py, not grammar's job), and Gemma is a VLM with no logits hook. So this
+    raises for the current lineup by design -- see CLAUDE.md 'Constrained decoding'."""
     r = repo.lower()
-    for key in FAMILIES:
-        if key in r:
+    for pat, key in _REPO_FAMILY_PATTERNS:
+        if pat in r:
             return key
     raise ValueError(
-        f"no wire family for repo {repo!r}; register it in grammar.FAMILIES "
-        f"(known: {', '.join(FAMILIES)})")
+        f"no constrained-decoding wire family for repo {repo!r}. Constrained decoding is "
+        f"validated on the JSON tool-call families {[k for _, k in _REPO_FAMILY_PATTERNS]} "
+        f"(Qwen2.x, Llama-3.x); the current lineup is free-decoding only (see CLAUDE.md).")
 
 
 def build_grammar(family_key: str, case_tools: list[str], tools: dict[str, dict],

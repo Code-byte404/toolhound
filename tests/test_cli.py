@@ -20,13 +20,13 @@ def _fake_run(repo, case, tools, **kw):
 
 def test_run_default_baseline_writes_report(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "run_free", _fake_run)
-    rc = cli.main(["run", "--model", "qwen2.5-0.5b", "--quant", "q4",
+    rc = cli.main(["run", "--model", "qwen3.5-2b", "--quant", "q4",
                    "--cases", "cases/smoke.jsonl", "--out", str(tmp_path)])
     assert rc == 0
-    data = json.loads((tmp_path / "run-qwen2.5-0.5b.json").read_text())
-    q4 = data["models"]["qwen2.5-0.5b"]["quants"]["q4"]
+    data = json.loads((tmp_path / "run-qwen3.5-2b.json").read_text())
+    q4 = data["models"]["qwen3.5-2b"]["quants"]["q4"]
     assert len(q4["baseline"]["cases"]) == 3           # method dimension
-    assert (tmp_path / "run-qwen2.5-0.5b.md").exists()
+    assert (tmp_path / "run-qwen3.5-2b.md").exists()
 
 
 def test_run_pa_tool_method(tmp_path, monkeypatch):
@@ -34,17 +34,17 @@ def test_run_pa_tool_method(tmp_path, monkeypatch):
     # fake candidate generator so no MLX: everything renames to itself (identity-ish)
     monkeypatch.setattr(cli, "_make_gen",
                         lambda repo: (lambda prompt, n, temp, seed: ["get_weather"] * n))
-    rc = cli.main(["run", "--model", "qwen2.5-0.5b", "--quant", "q4",
+    rc = cli.main(["run", "--model", "qwen3.5-2b", "--quant", "q4",
                    "--method", "baseline,pa_tool", "--cases", "cases/smoke.jsonl",
                    "--out", str(tmp_path), "--cache-dir", str(tmp_path / "cache")])
     assert rc == 0
-    data = json.loads((tmp_path / "run-qwen2.5-0.5b.json").read_text())
-    q4 = data["models"]["qwen2.5-0.5b"]["quants"]["q4"]
+    data = json.loads((tmp_path / "run-qwen3.5-2b.json").read_text())
+    q4 = data["models"]["qwen3.5-2b"]["quants"]["q4"]
     assert set(q4) == {"baseline", "pa_tool"}
     assert "adaptation" in q4["pa_tool"]                 # rename map recorded
     assert "name_map" in q4["pa_tool"]["adaptation"]     # tool renames
     assert "param_maps" in q4["pa_tool"]["adaptation"]   # param renames (spec §7)
-    md = (tmp_path / "run-qwen2.5-0.5b.md").read_text()
+    md = (tmp_path / "run-qwen3.5-2b.md").read_text()
     assert "pa_tool" in md
 
 
@@ -54,34 +54,46 @@ def _fake_constrained(repo, case, tools, **kw):
                      '{"location": "Tokyo"}}</tool_call>', 0.1, 50.0, 100.0)
 
 
+def test_constrained_rejected_for_current_lineup(tmp_path, monkeypatch):
+    # the current registry is free-decoding only; requesting constrained must fail fast
+    # (before loading any model) with a clear message, not silently mis-decode.
+    monkeypatch.setattr(cli, "run_free", _fake_run)
+    with pytest.raises(SystemExit):
+        cli.main(["run", "--model", "qwen3.5-2b", "--decode", "constrained",
+                  "--cases", "cases/smoke.jsonl", "--out", str(tmp_path)])
+
+
 def test_run_decode_axis_nests_and_compares(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "run_free", _fake_run)
     monkeypatch.setattr(cli, "run_constrained", _fake_constrained)
-    rc = cli.main(["run", "--model", "qwen2.5-0.5b", "--quant", "q4",
+    # no current model has a constrained wire family; bypass the fail-fast guard to
+    # exercise the decode-nesting/report logic itself.
+    monkeypatch.setattr("toolprobe.grammar.detect_family", lambda repo: "qwen")
+    rc = cli.main(["run", "--model", "qwen3.5-2b", "--quant", "q4",
                    "--decode", "free,constrained", "--cases", "cases/smoke.jsonl",
                    "--out", str(tmp_path)])
     assert rc == 0
-    data = json.loads((tmp_path / "run-qwen2.5-0.5b.json").read_text())
+    data = json.loads((tmp_path / "run-qwen3.5-2b.json").read_text())
     assert data["decodes"] == ["free", "constrained"]
-    q4 = data["models"]["qwen2.5-0.5b"]["quants"]["q4"]
+    q4 = data["models"]["qwen3.5-2b"]["quants"]["q4"]
     # >1 decode => nested by decode under the method
     assert set(q4["baseline"]) == {"free", "constrained"}
     assert len(q4["baseline"]["constrained"]["cases"]) == 3
-    md = (tmp_path / "run-qwen2.5-0.5b.md").read_text()
+    md = (tmp_path / "run-qwen3.5-2b.md").read_text()
     assert "Decode comparison" in md
 
 
 def test_unknown_decode_rejected(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "run_free", _fake_run)
     with pytest.raises(SystemExit):
-        cli.main(["run", "--model", "qwen2.5-0.5b", "--decode", "bogus",
+        cli.main(["run", "--model", "qwen3.5-2b", "--decode", "bogus",
                   "--cases", "cases/smoke.jsonl", "--out", str(tmp_path)])
 
 
 def test_unknown_method_rejected(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "run_free", _fake_run)
     with pytest.raises(SystemExit):
-        cli.main(["run", "--model", "qwen2.5-0.5b", "--method", "bogus",
+        cli.main(["run", "--model", "qwen3.5-2b", "--method", "bogus",
                   "--cases", "cases/smoke.jsonl", "--out", str(tmp_path)])
 
 

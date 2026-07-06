@@ -1,16 +1,23 @@
-"""The ONLY module that may import mlx / mlx_lm / outlines (build guide §3.1).
+"""The ONLY module that may import mlx / mlx_lm / mlx_vlm / outlines (build guide §3.1).
 Isolates API drift. Generation defaults to temp=0 greedy (deterministic eval);
 generate(temp>0, seed=...) does seeded sampling for reproducible stochastic draws
 (PA-Tool candidate generation). Constrained decoding (grammar=...) is trigger-gated:
 free generation until the model emits its family's tool-call opener, then the JSON
 body is masked to the grammar via an outlines_core Guide (so abstention stays
-reachable -- design doc §4.4). Verified against mlx 0.31.2 / mlx-lm 0.31.3 /
-outlines-core 0.2.14."""
+reachable -- design doc §4.4).
+
+Vision-language models (Gemma-4 is `gemma4_unified`) load/generate via mlx-vlm, which
+has a different API and NO logits_processors hook -- so they run free decoding only;
+constrained decoding raises. Verified against mlx 0.31.2 / mlx-lm 0.31.3 /
+mlx-vlm 0.6.3 / outlines-core 0.2.14."""
 import time
 from dataclasses import dataclass
 from functools import lru_cache
 
 from .grammar import GrammarSpec
+
+# model_types that mlx-lm can't load -- routed through mlx-vlm (text-only inference).
+_VLM_TYPES = {"gemma4_unified"}
 
 
 @dataclass
@@ -21,14 +28,31 @@ class GenResult:
     peak_mem_mb: float
 
 
+@lru_cache(maxsize=16)
+def _model_type(repo: str) -> str:
+    import json
+
+    from huggingface_hub import hf_hub_download
+    with open(hf_hub_download(repo, "config.json")) as f:
+        return json.load(f).get("model_type", "")
+
+
+def _is_vlm(repo: str) -> bool:
+    return _model_type(repo) in _VLM_TYPES
+
+
 @lru_cache(maxsize=4)
 def load_model(repo: str):
+    if _is_vlm(repo):
+        from mlx_vlm import load as vlm_load
+        return vlm_load(repo)          # (model, processor)
     from mlx_lm import load
-    return load(repo)
+    return load(repo)                  # (model, tokenizer)
 
 
 def get_tokenizer(repo: str):
-    return load_model(repo)[1]
+    obj = load_model(repo)[1]
+    return obj.tokenizer if _is_vlm(repo) else obj   # VLM processor -> .tokenizer
 
 
 def assert_same_template(bf16_repo: str, q4_repo: str) -> None:
@@ -130,9 +154,34 @@ def _schema_regex(spec: GrammarSpec) -> str:
     return r"[ \t\r\n]*" + body + spec.family.call_close
 
 
+def _generate_vlm(repo: str, prompt: str, max_tokens: int,
+                  grammar: GrammarSpec | None, temp: float, seed: int | None) -> GenResult:
+    import mlx.core as mx
+    from mlx_vlm import generate as vlm_generate
+    if grammar is not None:
+        raise NotImplementedError(
+            "constrained decoding is unavailable for VLM models: mlx-vlm has no "
+            "logits_processors hook (Gemma-4 is gemma4_unified)")
+    model, processor = load_model(repo)
+    if seed is not None:
+        mx.random.seed(seed)
+    t0 = time.perf_counter()
+    out = vlm_generate(model, processor, prompt=prompt, max_tokens=max_tokens,
+                       temperature=temp, verbose=False)
+    dt = time.perf_counter() - t0
+    text = getattr(out, "text", out)
+    text = text if isinstance(text, str) else str(text)
+    n_tok = len(processor.tokenizer.encode(text))
+    peak_mb = mx.get_peak_memory() / (1024 * 1024)
+    return GenResult(text=text, ttft_s=dt, tok_per_s=(n_tok / dt if dt > 0 else 0.0),
+                     peak_mem_mb=peak_mb)
+
+
 def generate(repo: str, prompt: str, max_tokens: int = 256,
              grammar: GrammarSpec | None = None, temp: float = 0.0,
              seed: int | None = None) -> GenResult:
+    if _is_vlm(repo):
+        return _generate_vlm(repo, prompt, max_tokens, grammar, temp, seed)
     import mlx.core as mx
     from mlx_lm import generate as mlx_generate
     from mlx_lm.sample_utils import make_sampler

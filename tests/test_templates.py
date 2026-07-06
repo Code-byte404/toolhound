@@ -27,12 +27,25 @@ def test_multiturn_assistant_tool_call_becomes_tool_calls_message():
     a = msgs[2]
     assert a["role"] == "assistant"
     assert a["tool_calls"][0]["function"]["name"] == "read_calendar"
+    assert a["tool_calls"][0]["function"]["arguments"] == {"date": "2026-03-26"}  # dict, not str
     assert msgs[3]["role"] == "tool"
+
+
+def test_tool_call_serializer_embeds_native_call_in_content():
+    # For a model whose template drops tool_calls (e.g. Granite), the prior call is
+    # serialized into `content` natively instead of the OpenAI tool_calls field, so
+    # multi-turn context stays faithful.
+    def ser(tool, args):
+        return f"<<{tool}:{args['date']}>>"
+    msgs = case_to_messages(MULTI, tool_call_serializer=ser)
+    a = msgs[2]
+    assert a["role"] == "assistant" and "tool_calls" not in a
+    assert a["content"] == "<<read_calendar:2026-03-26>>"
 
 
 class FakeTokenizer:
     def apply_chat_template(self, messages, tools=None, add_generation_prompt=True,
-                            tokenize=False):
+                            tokenize=False, **kwargs):
         names = ",".join(t["function"]["name"] for t in (tools or []))
         return f"TOOLS[{names}]|" + "|".join(m["role"] for m in messages)
 
@@ -50,7 +63,7 @@ class TemplateTokenizer:
         self.example = example
 
     def apply_chat_template(self, messages, tools=None, add_generation_prompt=True,
-                            tokenize=False):
+                            tokenize=False, **kwargs):
         name = tools[0]["function"]["name"] if tools else ""
         return (f"system: use {name}\n"
                 f"<tool_call>\n{self.example}\n</tool_call>\nuser: hi\n")

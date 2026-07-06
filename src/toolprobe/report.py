@@ -34,7 +34,7 @@ def env_header() -> dict:
     except OSError:
         chip = platform.machine()
     return {"chip": chip, "macos": platform.mac_ver()[0],
-            "mlx": v("mlx"), "mlx_lm": v("mlx-lm"),
+            "mlx": v("mlx"), "mlx_lm": v("mlx-lm"), "mlx_vlm": v("mlx-vlm"),
             "outlines_core": v("outlines-core"), "toolprobe": v("mlx-toolprobe")}
 
 

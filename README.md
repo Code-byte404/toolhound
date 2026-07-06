@@ -13,14 +13,14 @@
 <p align="center">
   <a href="#quickstart"><img src="https://img.shields.io/badge/Apple%20Silicon-MLX%20native-000000?logo=apple&logoColor=white" alt="MLX native"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/tests-113%20passing-2ea44f" alt="tests">
+  <img src="https://img.shields.io/badge/tests-124%20passing-2ea44f" alt="tests">
   <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="license">
   <img src="https://img.shields.io/badge/status-v2%20%C2%B7%20pre--release-orange" alt="status">
 </p>
 
 <p align="center">
   <img src="assets/result-card.png" width="840"
-       alt="Three small models fail tool calls for three different root causes: Qwen2.5-0.5B fails on an upstream chat-template bug (not the model's fault), while Qwen2.5-1.5B and Llama-3.2-3B fail on model judgment.">
+       alt="Toolhound attributes every tool-call failure to one of four causes — a chat-template bug, a framework parser gap, a model format failure, or a model decision failure — separating the model's fault from the framework's.">
 </p>
 
 ---
@@ -31,15 +31,17 @@ Everyone benchmarks tool-calling with a single number: *"Model X gets 71% of fun
 That number is a **lie of omission**. It can't tell you *why* the other 29% failed — and the *why* is
 the only thing that tells you what to do next.
 
-Two models can score the *same* accuracy for completely different reasons:
+Three models can *look* like they fail tool-calling for the same reason — and be wrong three different ways.
+Here's what the **2026-07 lineup** actually surfaced (real numbers below):
 
-| Model | Same task, its dominant failure is… | So the fix is… |
-|---|---|---|
-| **Qwen2.5-0.5B** | 🧩 the chat template mangles tool tokens | **File a bug upstream** — the model was never given a fair chance |
-| **Qwen2.5-1.5B** | 🧠 valid JSON, wrong tool/args | **Better model or better prompt** — grammar can't fix judgment |
-| **Llama-3.2-3B** | 🧠 valid JSON, wrong tool/args | **Better model or better prompt** |
+| Model | Its "failure" looks like… | …but the real culprit is | So the fix is… |
+|---|---|---|---|
+| **Granite-3.3-2B** | 🧩 can't do multi-turn tool calls | the **chat template** silently drops the prior call | **File upstream** / faithful rendering |
+| **Gemma-4-12B** | 🔧 emits schema-invalid calls | the **harness parser** missed its array syntax | **Fix the parser** — not the model |
+| **Qwen3.5-2B** | 🧠 picks the wrong arguments | genuine **model judgment** (args 0.76) | **Better model or prompt** — grammar can't fix this |
 
-> One of those is *not the model's fault.* A plain accuracy score hides that. **Toolhound doesn't.**
+> Two of those three are *not the model's fault.* A plain accuracy score would have blamed the model for all three.
+> **Toolhound doesn't** — it caught a template bug and a parser gap, and only pinned the third on the model.
 
 Toolhound is a **reproducible diagnostic harness** that runs entirely on your Mac (via
 [MLX](https://github.com/ml-explore/mlx)) and attributes **every single failure** to one of four causes —
@@ -103,27 +105,28 @@ Then run the detective on a model:
 ```bash
 # 1) Reliability report: how often does each model get tool calls right?
 toolprobe run \
-  --model qwen2.5-1.5b \
-  --quant bf16,q4 \
-  --cases cases/default.jsonl \
+  --model qwen3.5-2b,granite-3.3-2b,gemma4-12b \
+  --quant q4 \
+  --cases cases/test.jsonl \
   --out reports/
 
 # 2) Attribution: for every failure, name the culprit (run under strict + lenient parsers)
-toolprobe attribute --model qwen2.5-1.5b
+toolprobe attribute --model qwen3.5-2b
 
 # 3) Compare a zero-training fix against baseline (v2)
-toolprobe run --model qwen2.5-1.5b --cases cases/test.jsonl --method baseline,pa_tool
+toolprobe run --model qwen3.5-2b --cases cases/dev.jsonl --method baseline,pa_tool
 
 # 4) Free vs. grammar-constrained decoding — adds a "Decode comparison" table (v2)
+#    (validated on the reference JSON-family lineup; see the constrained-decoding section)
 toolprobe run --model qwen2.5-0.5b --cases cases/dev.jsonl --decode free,constrained
 ```
 
 Both commands write matching `*.json` (machine-readable) and `*.md` (human-readable) reports into `reports/`,
-each stamped with a full reproducibility header: chip, RAM, macOS version, exact `mlx` / `mlx-lm` versions,
+each stamped with a full reproducibility header: chip, RAM, macOS version, exact `mlx` / `mlx-lm` / `mlx-vlm` versions,
 model repo + revision, and the injected date.
 
-*(The bundled model keys — `qwen2.5-0.5b`, `qwen2.5-1.5b`, `llama-3.2-3b` — are registered in
-`src/toolprobe/backend.py`; add your own there.)*
+*(The bundled model keys — `qwen3.5-2b`, `granite-3.3-2b`, `gemma4-12b` (2026-07 refresh) — are registered in
+`src/toolprobe/cli.py`; each family has a distinct native tool-call format. Add your own there.)*
 
 ---
 
@@ -132,13 +135,28 @@ model repo + revision, and the injected date.
 **Reliability** — layered scoring, so you see exactly where each model drops off:
 
 ```
-Model: qwen2.5-1.5b  (q4)                     95% bootstrap CI · Apple M2 Pro
+Model: qwen3.5-2b  (q4)                       95% bootstrap CI · Apple M2 Pro
 ─────────────────────────────────────────────────────────────────────────
-parse_ok          ███████████████████░  0.96  [0.92, 0.99]
-schema_valid      ███████████████████░  0.96  [0.92, 0.99]
-tool_correct      ███████████████████░  0.96  [0.92, 0.99]
-args_correct      ██████████████░░░░░░  0.71  [0.63, 0.79]
+parse_ok          ███████████████████░  0.99  [0.98, 1.00]
+schema_valid      ███████████████████░  0.99  [0.98, 1.00]
+tool_correct      ███████████████████░  0.99  [0.98, 1.00]
+args_correct      ███████████████░░░░░  0.76  [0.69, 0.83]   ← syntax solved, judgment isn't
 ```
+
+The **current (2026-07) lineup** on held-out `test.jsonl` (q4, free decoding) shows the layered story
+cleanly — the newer models have *solved the syntax layer*, so the only differentiator left is judgment:
+
+```
+model            parse_ok   schema_valid  tool_correct  args_correct   (held-out test.jsonl, q4)
+qwen3.5-2b         0.99         0.99          0.99          0.76        ← syntax solved; decision-bound
+granite-3.3-2b     1.00         1.00          1.00          0.75        ← syntax solved; decision-bound
+gemma4-12b         1.00         1.00          1.00          0.97        ← the 12B also nails the decisions
+```
+
+Three families, three *distinct* native formats (Qwen3.5 XML · Granite JSON-list · Gemma-4 VLM), and every
+one drives `parse/schema/tool` to ≈1.0 — which is exactly *why* grammar-constrained decoding has no room to help
+here (see below). The full report, with bootstrap CIs, is in
+[`reports/`](reports/run-qwen3.5-2b+granite-3.3-2b+gemma4-12b.md).
 
 **Attribution** — every failure pinned to a suspect, shown under *both* parser tiers so you can see the
 conclusion doesn't flip when the parser gets more lenient:
@@ -176,13 +194,14 @@ back it up.** *(Demonstration on the exploratory `default.jsonl`; real method se
 
 ### And when a fix *does* work — grammar-constrained decoding (v2)
 
-Toolhound now runs a second axis, `--decode free,constrained`, that masks generation to each model's own
+Toolhound runs a second axis, `--decode free,constrained`, that masks generation to a model's own
 tool-call grammar via [`outlines-core`](https://github.com/dottxt-ai/outlines-core) — trigger-gated, so a model
 can still decline to call a tool (abstention survives). Selected on the `dev` split, then reported **once** on
-held-out `test.jsonl`, it becomes the first integrated fix to clear the credible bar — on **2 of 3** models:
+held-out `test.jsonl`, it was the first integrated fix to clear the credible bar — on **2 of 3** models of the
+**reference JSON-family lineup** (Qwen2.x / Llama-3.x):
 
 ```
-Constrained vs free decoding — held-out test.jsonl (q4) · Apple M2 Pro
+Constrained vs free decoding — reference lineup, held-out test.jsonl (q4) · Apple M2 Pro
 ──────────────────────────────────────────────────────────────────────────
 model          metric          free → constrained    credible
 qwen2.5-0.5b   parse/schema    0.50 → 0.76  (+0.27)    yes    ← format-bound: grammar rescues it
@@ -196,6 +215,50 @@ parseable, schema-valid call?) and can **never** fix the *decision* layer (is it
 values?). So it credibly helps the two models whose failures are syntactic, and does nothing for the model that
 already emits clean calls and just picks wrong. Toolhound is what lets you tell those two situations apart — and
 it even surfaces the honest cost (constrained decoding can degenerate into repetition on unbounded string fields).
+
+> **Why the current (2026-07) lineup is free-decoding only.** When we refreshed the registry to newer models
+> (`qwen3.5-2b`, `granite-3.3-2b`, `gemma4-12b`), Toolhound *measured* that none of them has syntactic headroom for
+> constrained decoding to fix: Qwen3.5's syntax layer is already saturated (its misses are all judgment), Granite's
+> only failures were a **multi-turn template bug** (see below — the fix is rendering, not grammar), and Gemma is a
+> VLM with no logits hook to constrain. So `--decode constrained` now *fails fast* on the current models by design —
+> the honest finding is that **newer 2B+ models have outgrown the format failures constrained decoding was built for.**
+> The capability stays implemented and tested for when a format-bound model is added back.
+
+### Field notes: two bugs the 2026-07 refresh caught 🐛
+
+Swapping in three brand-new models immediately flushed out two bugs — and the useful part is *neither was the
+model's fault*. Each maps onto one of the four suspects, which is exactly what Toolhound exists to prove.
+
+**① `framework_template_bug` — Granite's chat template drops multi-turn tool calls.** Granite 3.3 was *perfect* on
+every single-turn category but cratered on multi-turn cases, all with the same mangled shape
+`<|tool_call|>tool[{…args…}]`. The cause was not the model: Granite's chat template has no `tool_calls` branch, so
+it silently **dropped the prior assistant tool-call** from the history — the model was fed a tool *result* with no
+preceding *call*. The fix is faithful rendering (serialize the prior call in Granite's own native format), **not** a
+smarter model or a grammar:
+
+```
+Granite 3.3 · 16 affected multi-turn cases (test.jsonl, q4)   before → after the rendering fix
+parse_ok        0.38  →  1.00        (6/16 → 16/16)
+tool_correct    0.38  →  1.00
+args_correct    0.00  →  0.94        (0/16 → 15/16)   ← broken context made every call wrong
+```
+
+**② `framework_parser_gap` — Toolhound's *own* parser missed Gemma's array syntax.** Gemma-4 looked like it emitted
+15% schema-invalid calls. On inspection the calls were *fine* — Gemma writes list arguments as
+`attendees:[<|"|>a<|"|>,<|"|>b<|"|>]`, and Toolhound's Gemma parser was truncating the list at the first comma. That
+is textbook `framework_parser_gap` (a rescuable call the parser fumbled) — the harness caught it *in itself*, and the
+honest move was to fix the parser, not dock the model:
+
+```
+Gemma-4-12B · full test.jsonl, 131 non-abstention (q4)        before → after the parser fix
+schema_valid    0.85  →  1.00        (112/131 → 131/131)
+args_correct    0.85  →  0.97        (111/130 → 127/131)
+```
+
+**That is the whole value proposition, twice.** A plain accuracy score would have quietly blamed Granite and Gemma
+for **17** failures that belonged to a chat template and a parser gap. Toolhound's layered metrics flagged the
+discrepancy, and its four-cause discipline forced the honest attribution — *fix the harness / file it upstream*, not
+*"the model is bad."*
 
 ---
 
@@ -226,9 +289,9 @@ The pipeline is a clean, testable data flow — each stage is a pure function wi
 case → templates → runner → parser → scorer → attribution → report
 ```
 
-Only **one** module (`backend.py`) is allowed to import `mlx` / `mlx_lm`; a hygiene test enforces it. That
-keeps the parser, scorer, attribution, and grammar-builder logic 100% pure and unit-testable on *any* machine
-(no Mac required for the logic tier — 113 tests run in <1s in CI; the constrained-decoding e2e tests are the
+Only **one** module (`backend.py`) is allowed to import `mlx` / `mlx_lm` / `mlx_vlm`; a hygiene test enforces it.
+That keeps the parser, scorer, attribution, and grammar-builder logic 100% pure and unit-testable on *any* machine
+(no Mac required for the logic tier — 124 tests run in <1s in CI; the constrained-decoding e2e tests are the
 Mac-only tier).
 
 ---
@@ -239,10 +302,11 @@ Mac-only tier).
 - [x] **v2 (in progress)** — 304-case dev/test dataset with slot-disjoint splits; `PA-Tool` method integration
 - [x] **Grammar-constrained decoding** — abstention-safe, trigger-gated `--decode free,constrained` via
   `outlines-core` (torch-free); first fix to clear the credible bar on held-out `test.jsonl` (2 of 3 models)
+- [x] **Model refresh (2026-07)** — registry now spans three current families with three *distinct* native
+  formats: Qwen3.5 (XML), Granite 3.3 (JSON list), Gemma-4 (VLM via `mlx-vlm`, bespoke format)
 - [ ] **More methods** — TSCG (integrate & measure existing work — *not* invent new)
 - [ ] **A constrained-decoding string guard** — bounded-length / repetition-penalized string fields, to remove the
   degeneration cost the harness surfaced on unbounded string args
-- [ ] **More models** — expand the registry beyond Qwen / Llama
 - [ ] **PNG report export** for dropping straight into issues and blog posts
 
 ---

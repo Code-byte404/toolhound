@@ -77,6 +77,17 @@ def test_detect_family_rejects_unknown_repo():
         detect_family("mlx-community/SomeOther-Model")
 
 
+def test_detect_family_rejects_qwen3_not_mismapped_to_qwen2():
+    # Qwen3.5 shares the "qwen" brand but emits XML, NOT the JSON <tool_call>{...}
+    # this grammar describes -- it must NOT match the qwen2 family (would decode-mask
+    # to the wrong format). The current lineup is free-decoding only, by design.
+    for repo in ["mlx-community/Qwen3.5-2B-4bit",
+                 "mlx-community/granite-3.3-2b-instruct-4bit",
+                 "mlx-community/gemma-4-12B-it-4bit"]:
+        with pytest.raises(ValueError):
+            detect_family(repo)
+
+
 def test_families_registry_shape():
     assert set(FAMILIES) == {"qwen", "llama"}
     assert all(isinstance(f, WireFamily) for f in FAMILIES.values())

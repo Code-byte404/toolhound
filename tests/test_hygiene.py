@@ -6,6 +6,7 @@ from pathlib import Path
 SRC = Path(__file__).parent.parent / "src" / "toolprobe"
 
 # substring patterns that may only appear in backend.py
+# ("import mlx" also covers "import mlx_lm"/"import mlx_vlm"; "from mlx" likewise)
 BACKEND_ONLY = ("import mlx", "from mlx",
                 "import outlines", "from outlines",
                 "import xgrammar", "from xgrammar")

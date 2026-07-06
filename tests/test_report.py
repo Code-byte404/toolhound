@@ -54,4 +54,4 @@ def test_markdown_omits_empty_sections():
 
 def test_env_header_records_versions():
     env = env_header()
-    assert "mlx_lm" in env and "macos" in env and "chip" in env
+    assert "mlx_lm" in env and "mlx_vlm" in env and "macos" in env and "chip" in env

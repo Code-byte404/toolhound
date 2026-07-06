@@ -17,13 +17,17 @@ from .scorer import score
 
 DECODES = ("free", "constrained")
 
+# Three current-generation small models, one per family, each with a DISTINCT native
+# tool-call format (the cross-family contrast is the point). All non-gated; both quants
+# share a chat template. Granite has no bf16 on mlx-community, so its high-precision slot
+# is 8bit (we report q4; bf16-vs-q4 isn't run for it).
 MODELS = {
-    "qwen2.5-0.5b": {"bf16": "mlx-community/Qwen2.5-0.5B-Instruct-bf16",
-                     "q4": "mlx-community/Qwen2.5-0.5B-Instruct-4bit"},
-    "qwen2.5-1.5b": {"bf16": "mlx-community/Qwen2.5-1.5B-Instruct-bf16",
-                     "q4": "mlx-community/Qwen2.5-1.5B-Instruct-4bit"},
-    "llama-3.2-3b": {"bf16": "mlx-community/Llama-3.2-3B-Instruct-bf16",
-                     "q4": "mlx-community/Llama-3.2-3B-Instruct-4bit"},
+    "qwen3.5-2b": {"bf16": "mlx-community/Qwen3.5-2B-bf16",
+                   "q4": "mlx-community/Qwen3.5-2B-4bit"},
+    "gemma4-12b": {"bf16": "mlx-community/gemma-4-12B-it-bf16",
+                   "q4": "mlx-community/gemma-4-12B-it-4bit"},
+    "granite-3.3-2b": {"bf16": "mlx-community/granite-3.3-2b-instruct-8bit",
+                       "q4": "mlx-community/granite-3.3-2b-instruct-4bit"},
 }
 TOOLS_PATH = Path("cases/tools.yaml")
 console = Console()
@@ -100,6 +104,16 @@ def cmd_run(args) -> int:
     models = _models_arg(args.model)
     methods = _methods_arg(args.method)
     decodes = _decodes_arg(args.decode)
+    if "constrained" in decodes:
+        # fail fast (before loading any model) if a requested model has no constrained
+        # wire family -- the current lineup is free-decoding only (see grammar.detect_family)
+        from .grammar import detect_family
+        for model in models:
+            for quant in args.quant.split(","):
+                try:
+                    detect_family(MODELS[model][quant])
+                except ValueError as e:
+                    raise SystemExit(str(e))
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     env = env_header()

@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "mlx",
     "mlx-lm",
+    "mlx-vlm",         # VLM inference (Gemma-4 is gemma4_unified; mlx-lm can't load it)
     "outlines-core",  # constrained decoding (grammar -> logits mask); torch-free
     "pydantic>=2",
     "rich",

@@ -35,6 +35,79 @@ def test_framework_accepts_llama_python_tag():
     assert call.args["query"] == "weather in New York"
 
 
+def test_framework_accepts_qwen35_function_xml():
+    # Qwen3.5's native tool call is XML, not JSON:
+    # <function=NAME><parameter=KEY>value</parameter>. Values are raw text; the
+    # parser coerces JSON-typed ones (real captured output, 2026-07-06).
+    call = parse_framework(fx("qwen35_function_xml.txt"))
+    assert call is not None and call.tool == "get_weather"
+    assert call.args["location"] == "Paris" and call.args["unit"] == "celsius"
+
+
+def test_qwen35_xml_coerces_typed_param_values():
+    raw = ("<tool_call><function=convert_currency>"
+           "<parameter=amount>80</parameter>"
+           "<parameter=from>EUR</parameter><parameter=to>USD</parameter>"
+           "</function></tool_call>")
+    call = parse_framework(raw)
+    assert call.args["amount"] == 80 and isinstance(call.args["amount"], int)
+    assert call.args["from"] == "EUR"
+
+
+def test_framework_accepts_granite_tool_call_list():
+    # Granite: <|tool_call|>[{"name": .., "arguments": {..}}] -- take the first call.
+    call = parse_framework(fx("granite_tool_call.txt"))
+    assert call is not None and call.tool == "get_weather"
+    assert call.args["location"] == "Paris"
+
+
+def test_framework_accepts_gemma_bespoke_call():
+    # Gemma-4's native call is neither JSON nor XML:
+    # <|tool_call>call:NAME{key:<|"|>str<|"|>,...}<tool_call|>. String values are
+    # wrapped in <|"|> quote tokens (real captured output, 2026-07-06). Its opener
+    # "<|tool_call>" is distinct from Granite's "<|tool_call|>".
+    call = parse_framework(fx("gemma_tool_call.txt"))
+    assert call is not None and call.tool == "get_weather"
+    assert call.args["location"] == "Paris" and call.args["unit"] == "celsius"
+
+
+def test_gemma_keeps_quoted_strings_but_coerces_bare_values():
+    # Quoted (<|"|>...<|"|>) values stay strings even if numeric-looking;
+    # bare values are coerced to their JSON type.
+    raw = ('<|tool_call>call:book_room{guests:2,city:<|"|>Paris<|"|>,'
+           'code:<|"|>007<|"|>}<tool_call|>')
+    call = parse_framework(raw)
+    assert call.args["guests"] == 2 and isinstance(call.args["guests"], int)
+    assert call.args["city"] == "Paris"
+    assert call.args["code"] == "007" and isinstance(call.args["code"], str)
+
+
+def test_gemma_string_value_may_contain_comma():
+    # A comma inside a quoted value must not split the pair (the <|"|> close token,
+    # not the comma, terminates a string value).
+    raw = '<|tool_call>call:get_weather{location:<|"|>Paris, France<|"|>}<tool_call|>'
+    call = parse_framework(raw)
+    assert call.args["location"] == "Paris, France"
+
+
+def test_gemma_parses_array_valued_argument():
+    # Gemma emits list args as [<|"|>a<|"|>,<|"|>b<|"|>]; the parser must return a real
+    # list, not truncate at the first comma (real captured create_event output).
+    raw = ('<|tool_call>call:create_event{attendees:[<|"|>a@corp.com<|"|>,<|"|>b@corp.com<|"|>],'
+           'start:<|"|>2026-03-23T09:00:00Z<|"|>}<tool_call|>')
+    call = parse_framework(raw)
+    assert call.args["attendees"] == ["a@corp.com", "b@corp.com"]
+    assert call.args["start"] == "2026-03-23T09:00:00Z"       # colon-containing value intact
+
+
+def test_gemma_name_is_leading_identifier_ignoring_stray_token():
+    # a stray special token between the name and '{' (Gemma sometimes mis-emits one)
+    # must not corrupt the tool name.
+    raw = '<|tool_call>call:search_web<audio|>{query:<|"|>laptops<|"|>}<tool_call|>'
+    call = parse_framework(raw)
+    assert call.tool == "search_web" and call.args["query"] == "laptops"
+
+
 @pytest.mark.parametrize("name", ["codeblock.txt", "mistral_style.txt", "alias_keys.txt",
                                   "prose_wrapped.txt", "single_quotes.txt", "garbage.txt"])
 def test_framework_rejects_dirty(name):
